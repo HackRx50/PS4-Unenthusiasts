@@ -1,1 +1,6 @@
 fastapi[standard]
+PyPDF2
+sentence-transformers
+qdrant-client
+python-dotenv
+uvicorn
