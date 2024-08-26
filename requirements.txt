@@ -1,8 +1,12 @@
-fastapi[standard]
+fastapi
 uvicorn
 PyPDF2
 transformers
 torch
 qdrant-client
 python-dotenv
-
+pydantic
+langchain
+openai
+faiss-cpu
+tiktoken
