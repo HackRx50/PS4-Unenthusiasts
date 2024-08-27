@@ -15,6 +15,10 @@ from bson import ObjectId
 import uuid
 import os
 from dotenv import load_dotenv
+from langchain.agents import Tool, AgentType, initialize_agent
+from langchain.chat_models import ChatOpenAI
+import json
+
 
 class QueryRequest(BaseModel):
     query: str
@@ -93,6 +97,80 @@ def update_session(session_id: str, new_context: str):
         {"$push": {"context": new_context}}
     )
 
+def search_knowledge_base(input: dict) -> str:
+    print("session_id")
+    inputs_dict = json.loads(input)
+    
+    query = inputs_dict.get('query')
+    session_id = inputs_dict.get('session_id')
+
+    session = get_session(session_id)
+
+    embedding_function = get_embedding_function()
+    query_embedding = embedding_function.embed_query(query)
+
+    # Search the knowledge base in Qdrant
+    search_result = qdrant_client.search(
+        collection_name=collection_name,
+        query_vector=query_embedding,
+        limit=5  # Return top 5 relevant results
+    )
+
+    # Format the results
+    results = [{"text": hit.payload["text"], "score": hit.score} for hit in search_result]
+
+    # Prepare the LangChain LLM chain
+    llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
+    template = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."),
+        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.")
+    ])
+    chain = LLMChain(llm=llm, prompt=template)
+
+    # Construct the input for LangChain, including session context
+    context = "\n".join([f"Query: {interaction['query']}\nResponse: {interaction['gpt_response']}" for interaction in session["context"]])
+    information = "\n".join([f"- {result['text']}" for result in results])
+    print(context,"CONTEXT")
+    chain_input = {
+        "query": query,
+        "context": context,  # Pass previous session context
+        "information": information
+    }
+
+    # Get the GPT response using LangChain
+    gpt_response = chain.run(chain_input)
+    return gpt_response
+
+# Create a custom Tool for the knowledge base search
+knowledge_base_tool = Tool(
+    name="SearchKnowledgeBase",
+    func=search_knowledge_base,
+    description='Search the knowledge base for relevant information based on a detailed query from the user. '
+)
+
+
+
+
+
+
+
+
+# Initialize the LLM (you can continue using GPT-4)
+llm = ChatOpenAI(model_name="gpt-4", api_key=OPENAI_API_KEY)
+
+# Add the new tool to the tools list
+tools = [
+    knowledge_base_tool,
+]
+
+# Initialize the agent with the new tool
+agent = initialize_agent(
+    tools=tools,
+    llm=llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,  # Adjust the agent type as needed
+    verbose=True
+)
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -141,45 +219,22 @@ async def start_session():
 @app.post("/queryKnowledgeBase/")
 async def query_knowledge_base(request: QueryRequest, session_id: str):
     # Retrieve the session
-    session = get_session(session_id)
 
-    # Generate embedding for the query
-    query = request.query
-    embedding_function = get_embedding_function()
-    query_embedding = embedding_function.embed_query(query)
-
-    # Search the knowledge base in Qdrant
-    search_result = qdrant_client.search(
-        collection_name=collection_name,
-        query_vector=query_embedding,
-        limit=5  # Return top 5 relevant results
+    input_text = (
+        f"User has asked a Query. Answer the query from the Knowledge Base. "
+        f"This is the information provided by user - "
+        f"{{\"session_id\": \"{session_id}\", \"query\": \"{request.query}\"}}"
     )
-
-    # Format the results
-    results = [{"text": hit.payload["text"], "score": hit.score} for hit in search_result]
-
-    # Prepare the LangChain LLM chain
-    llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
-    template = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."),
-        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.")
-    ])
-    chain = LLMChain(llm=llm, prompt=template)
-
-    # Construct the input for LangChain, including session context
-    context = "\n".join([f"Query: {interaction['query']}\nResponse: {interaction['gpt_response']}" for interaction in session["context"]])
-    information = "\n".join([f"- {result['text']}" for result in results])
-    print(context,"CONTEXT")
+    print(input_text,"INPUT TEXT")
     chain_input = {
-        "query": query,
-        "context": context,  # Pass previous session context
-        "information": information
+    "query": request.query,
+    "session_id": session_id,
     }
 
-    # Get the GPT response using LangChain
-    gpt_response = chain.run(chain_input)
+    # chain_input_str = json.dumps(chain_input)
+    gpt_response = agent.run(input=input_text)
 
     # Update session context with the new interaction
-    update_session(session_id, {"query": query, "gpt_response": gpt_response})
+    update_session(session_id, {"query": request.query, "gpt_response": gpt_response})
 
-    return {"query": query, "results": results, "gpt_response": gpt_response}
+    return {"gpt_response": gpt_response}
