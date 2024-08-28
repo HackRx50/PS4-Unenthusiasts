@@ -149,12 +149,6 @@ knowledge_base_tool = Tool(
 )
 
 
-
-
-
-
-
-
 # Initialize the LLM (you can continue using GPT-4)
 llm = ChatOpenAI(model_name="gpt-4", api_key=OPENAI_API_KEY)
 
