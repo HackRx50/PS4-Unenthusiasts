@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from langchain.agents import Tool, AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
 import json
+from langchain_core.tools import StructuredTool
 
 
 class QueryRequest(BaseModel):
@@ -97,12 +98,9 @@ def update_session(session_id: str, new_context: str):
         {"$push": {"context": new_context}}
     )
 
-def search_knowledge_base(input: dict) -> str:
+def search_knowledge_base(query: str,session_id:str) -> str:
     print("session_id")
-    inputs_dict = json.loads(input)
     
-    query = inputs_dict.get('query')
-    session_id = inputs_dict.get('session_id')
 
     session = get_session(session_id)
 
@@ -141,15 +139,80 @@ def search_knowledge_base(input: dict) -> str:
     gpt_response = chain.run(chain_input)
     return gpt_response
 
-# Create a custom Tool for the knowledge base search
-knowledge_base_tool = Tool(
+class KnowledgeBaseArgs(BaseModel):
+    query: str
+    session_id: str
+knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
     func=search_knowledge_base,
-    description='Search the knowledge base for relevant information based on a detailed query from the user. '
+    description='Search the knowledge base for relevant information based on a detailed query from the user. ',
+    args_schema=KnowledgeBaseArgs
 )
 
+todo_list = []
+current_id = 1  # Start the ID count from 1
 
+# Create a new to-do item
+def add_todo_item(item: str) -> str:
+    global current_id
+    todo_id = current_id
+    todo_list.append({"item_id": todo_id, "item": item})
+    current_id += 1  # Increment the ID for the next item
+    return f"Added to-do item: {item} with ID: {todo_id}"
 
+# Read all to-do items
+def list_todo_items() -> str:
+    if not todo_list:
+        return "Your to-do list is empty."
+    return "Your to-do items are:\n" + "\n".join([f"{todo['item_id']}: {todo['item']}" for todo in todo_list])
+
+# Update a to-do item
+def update_todo_item(item_id: int,new_item:str) -> str:
+    # inputs_dict = json.loads(input)
+    
+    todo_id = item_id
+    new_item = new_item
+
+    for todo in todo_list:
+        if todo["item_id"] == todo_id:
+            todo["item"] = new_item
+            return f"Updated to-do item with ID: {todo_id} to: {new_item}"
+    return f"No to-do item found with ID: {todo_id}"
+
+# Delete a to-do item
+def delete_todo_item(todo_id: int) -> str:
+    global todo_list
+    todo_list = [todo for todo in todo_list if todo["item_id"] != todo_id]
+    return f"Deleted to-do item with ID: {todo_id}"
+
+# Define tools for the to-do list CRUD operations
+add_todo_tool = StructuredTool.from_function(
+    name="AddToDo",
+    func=add_todo_item,
+    description="Add a new item to your to-do list. Input should be the to-do item."
+)
+
+list_todo_tool = StructuredTool.from_function(
+    name="ListToDo",
+    func=list_todo_items,
+    description="List all items in your to-do list."
+)
+class UpdateToDoItemArgs(BaseModel):
+    item_id: int
+    new_item: str
+update_todo_tool = StructuredTool.from_function(
+    name="UpdateToDo",
+    func=update_todo_item,
+    description='Update an existing to-do item.',
+    args_schema=UpdateToDoItemArgs,
+
+)
+
+delete_todo_tool = StructuredTool.from_function(
+    name="DeleteToDo",
+    func=lambda todo_id: delete_todo_item(int(todo_id)),
+    description="Delete a to-do item. Input should be the to-do item ID."
+)
 
 
 
@@ -161,13 +224,14 @@ llm = ChatOpenAI(model_name="gpt-4", api_key=OPENAI_API_KEY)
 # Add the new tool to the tools list
 tools = [
     knowledge_base_tool,
+    add_todo_tool, list_todo_tool, update_todo_tool, delete_todo_tool
 ]
 
 # Initialize the agent with the new tool
 agent = initialize_agent(
     tools=tools,
     llm=llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,  # Adjust the agent type as needed
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,  # Adjust the agent type as needed
     verbose=True
 )
 
