@@ -1,6 +1,7 @@
 import tempfile
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from PyPDF2 import PdfReader
+from llama_parse import LlamaParse
 from transformers import BertTokenizer, BertModel
 import torch
 from qdrant_client import QdrantClient

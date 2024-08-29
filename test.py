@@ -107,16 +107,16 @@ def update_session(session_id: str, new_context: str):
 class SemanticCache:
     def __init__(self, embedding_function, threshold=0.35):
         self.encoder = embedding_function()
-        self.cache_client = QdrantClient(":memory:")  # Use in-memory Qdrant for cache
+        self.cache_client = qdrant_client  # Use in-memory Qdrant for cache
         self.cache_collection_name = "cache"
 
-        # Check if the cache collection already exists, and create if not
+        # Check if the cache collection already exists, and create it if not
         collections = self.cache_client.get_collections().collections
         if not any(collection.name == self.cache_collection_name for collection in collections):
             self.cache_client.create_collection(
                 collection_name=self.cache_collection_name,
                 vectors_config=VectorParams(
-                    size=1536,  # Assuming the output size of OpenAIEmbeddings
+                    size=3072,  # Assuming the output size of OpenAIEmbeddings
                     distance=Distance.EUCLID
                 )
             )
@@ -126,7 +126,7 @@ class SemanticCache:
 
         # Configure the database connection
         self.db_client = qdrant_client
-        self.db_collection_name = os.getenv('QDRANT_COLLECTION_NAME')
+        self.db_collection_name = "cache"
         self.euclidean_threshold = threshold
 
     def get_embedding(self, question):
@@ -153,70 +153,31 @@ class SemanticCache:
             points=[point]
         )
 
-    def query_database(self, query_text):
-        results = self.db_client.search(
-            collection_name=self.db_collection_name,
-            query_vector=self.get_embedding(query_text),
-            limit=3
-        )
-        return results
 
-    def ask(self, question):
-        start_time = time.time()
-        vector = self.get_embedding(question)
-        search_result = self.search_cache(vector)
-        
-        if search_result:
-            for s in search_result:
-                if s.score <= self.euclidean_threshold:
-                    print('Answer recovered from Cache.')
-                    print(f'Found cache with score {s.score:.3f}')
-                    elapsed_time = time.time() - start_time
-                    print(f"Time taken: {elapsed_time:.3f} seconds")
-                    return s.payload['response_text']
-
-        db_results = self.query_database(question)
-        if db_results:
-            response_text = db_results[0].payload["text"]
-            self.add_to_cache(question, response_text)
-            print('Answer added to Cache.')
-            elapsed_time = time.time() - start_time
-            print(f"Time taken: {elapsed_time:.3f} seconds")
-            return response_text
-
-        print('No answer found in Cache or Database.')
-        elapsed_time = time.time() - start_time
-        print(f"Time taken: {elapsed_time:.3f} seconds")
-        return "No answer available."
-
-# Instantiate with OpenAI Embedding function
 semantic_cache = SemanticCache(embedding_function=get_embedding_function)
+
 
 def search_knowledge_base(query: str, session_id: str) -> str:
     session = get_session(session_id)
 
     # Check semantic cache first
-    cached_response = semantic_cache.ask(query)
-    if cached_response and cached_response != "No answer available.":
-        return cached_response
-
-    embedding_function = get_embedding_function()
-    query_embedding = embedding_function.embed_query(query)
-    if query_embedding.size == 0:
-        raise ValueError("Query embedding generation failed or resulted in an empty embedding.")
+    query_embedding = semantic_cache.get_embedding(query)
+    cache_results = semantic_cache.search_cache(query_embedding)
     
+    if cache_results:
+        for result in cache_results:
+            if result.score <= semantic_cache.euclidean_threshold:
+                print('Answer recovered from Cache.')
+                print(f'Found cache with score {result.score:.3f}')
+                return result.payload['response_text']
 
-    # Print dimensions for debugging
-    print(f"Query embedding shape: {query_embedding.shape}")
-
-    # Ensure embedding is in correct format
-    if query_embedding.ndim == 1:
-        query_embedding = query_embedding.reshape(1, -1)
+    # Cache miss: proceed with knowledge base search
+    print('Cache miss. Searching knowledge base.')
     
     # Search the knowledge base in Qdrant
     search_result = qdrant_client.search(
         collection_name=collection_name,
-        query_vector=query_embedding.tolist()[0],  # Convert to list for compatibility
+        query_vector=query_embedding,  # Convert to list for compatibility
         limit=5  # Return top 5 relevant results
     )
 
@@ -247,6 +208,8 @@ def search_knowledge_base(query: str, session_id: str) -> str:
     semantic_cache.add_to_cache(query, gpt_response)
     
     return gpt_response
+
+
 
 # def search_knowledge_base(query: str,session_id:str) -> str:
 #     print("session_id")
