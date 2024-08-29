@@ -13,3 +13,4 @@ tiktoken
 bson
 pymongo
 langchain-community
+langchain_core

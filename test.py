@@ -1,6 +1,8 @@
 import tempfile
+import time
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from PyPDF2 import PdfReader
+from llama_parse import LlamaParse
 from transformers import BertTokenizer, BertModel
 import torch
 from qdrant_client import QdrantClient
@@ -20,19 +22,22 @@ from langchain.agents import Tool, AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
 import json
 from langchain_core.tools import StructuredTool
+import nest_asyncio
 
+nest_asyncio.apply()
 
 class QueryRequest(BaseModel):
     query: str
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path="/home/anurag/projects/chatbot/.env")
+load_dotenv()
 
 DB_URL = os.getenv("DB_URL")
 DB_API_KEY = os.getenv("DB_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+LLAMA_CLOUD_API_KEY=os.getenv("LLAMA_CLOUD_API_KEY")
 app = FastAPI()
 print("MONGO_URI",MONGO_URI)
 # Initialize MongoDB client
@@ -99,19 +104,119 @@ def update_session(session_id: str, new_context: str):
         {"$push": {"context": new_context}}
     )
 
-def search_knowledge_base(query: str,session_id:str) -> str:
-    print("session_id")
-    
+class SemanticCache:
+    def __init__(self, embedding_function, threshold=0.35):
+        self.encoder = embedding_function()
+        self.cache_client = QdrantClient(":memory:")  # Use in-memory Qdrant for cache
+        self.cache_collection_name = "cache"
 
+        # Check if the cache collection already exists, and create if not
+        collections = self.cache_client.get_collections().collections
+        if not any(collection.name == self.cache_collection_name for collection in collections):
+            self.cache_client.create_collection(
+                collection_name=self.cache_collection_name,
+                vectors_config=VectorParams(
+                    size=1536,  # Assuming the output size of OpenAIEmbeddings
+                    distance=Distance.EUCLID
+                )
+            )
+            print(f"Cache collection '{self.cache_collection_name}' created.")
+        else:
+            print(f"Cache collection '{self.cache_collection_name}' already exists.")
+
+        # Configure the database connection
+        self.db_client = qdrant_client
+        self.db_collection_name = os.getenv('QDRANT_COLLECTION_NAME')
+        self.euclidean_threshold = threshold
+
+    def get_embedding(self, question):
+        embedding = self.encoder.embed_query(question)  # Adjusted for OpenAIEmbeddings interface
+        return embedding
+
+    def search_cache(self, embedding):
+        search_result = self.cache_client.search(
+            collection_name=self.cache_collection_name,
+            query_vector=embedding,
+            limit=1
+        )
+        return search_result
+
+    def add_to_cache(self, question, response_text):
+        # Create a unique ID for the new point
+        point_id = str(uuid.uuid4())
+        vector = self.get_embedding(question)
+        # Create the point with payload
+        point = PointStruct(id=point_id, vector=vector, payload={"response_text": response_text})
+        # Upload the point to the cache
+        self.cache_client.upsert(
+            collection_name=self.cache_collection_name,
+            points=[point]
+        )
+
+    def query_database(self, query_text):
+        results = self.db_client.search(
+            collection_name=self.db_collection_name,
+            query_vector=self.get_embedding(query_text),
+            limit=3
+        )
+        return results
+
+    def ask(self, question):
+        start_time = time.time()
+        vector = self.get_embedding(question)
+        search_result = self.search_cache(vector)
+        
+        if search_result:
+            for s in search_result:
+                if s.score <= self.euclidean_threshold:
+                    print('Answer recovered from Cache.')
+                    print(f'Found cache with score {s.score:.3f}')
+                    elapsed_time = time.time() - start_time
+                    print(f"Time taken: {elapsed_time:.3f} seconds")
+                    return s.payload['response_text']
+
+        db_results = self.query_database(question)
+        if db_results:
+            response_text = db_results[0].payload["text"]
+            self.add_to_cache(question, response_text)
+            print('Answer added to Cache.')
+            elapsed_time = time.time() - start_time
+            print(f"Time taken: {elapsed_time:.3f} seconds")
+            return response_text
+
+        print('No answer found in Cache or Database.')
+        elapsed_time = time.time() - start_time
+        print(f"Time taken: {elapsed_time:.3f} seconds")
+        return "No answer available."
+
+# Instantiate with OpenAI Embedding function
+semantic_cache = SemanticCache(embedding_function=get_embedding_function)
+
+def search_knowledge_base(query: str, session_id: str) -> str:
     session = get_session(session_id)
+
+    # Check semantic cache first
+    cached_response = semantic_cache.ask(query)
+    if cached_response and cached_response != "No answer available.":
+        return cached_response
 
     embedding_function = get_embedding_function()
     query_embedding = embedding_function.embed_query(query)
+    if query_embedding.size == 0:
+        raise ValueError("Query embedding generation failed or resulted in an empty embedding.")
+    
 
+    # Print dimensions for debugging
+    print(f"Query embedding shape: {query_embedding.shape}")
+
+    # Ensure embedding is in correct format
+    if query_embedding.ndim == 1:
+        query_embedding = query_embedding.reshape(1, -1)
+    
     # Search the knowledge base in Qdrant
     search_result = qdrant_client.search(
         collection_name=collection_name,
-        query_vector=query_embedding,
+        query_vector=query_embedding.tolist()[0],  # Convert to list for compatibility
         limit=5  # Return top 5 relevant results
     )
 
@@ -129,7 +234,6 @@ def search_knowledge_base(query: str,session_id:str) -> str:
     # Construct the input for LangChain, including session context
     context = "\n".join([f"Query: {interaction['query']}\nResponse: {interaction['gpt_response']}" for interaction in session["context"]])
     information = "\n".join([f"- {result['text']}" for result in results])
-    print(context,"CONTEXT")
     chain_input = {
         "query": query,
         "context": context,  # Pass previous session context
@@ -138,8 +242,54 @@ def search_knowledge_base(query: str,session_id:str) -> str:
 
     # Get the GPT response using LangChain
     gpt_response = chain.run(chain_input)
+
+    # Add the response to the semantic cache
+    semantic_cache.add_to_cache(query, gpt_response)
+    
     return gpt_response
 
+# def search_knowledge_base(query: str,session_id:str) -> str:
+#     print("session_id")
+    
+
+#     session = get_session(session_id)
+
+#     embedding_function = get_embedding_function()
+#     query_embedding = embedding_function.embed_query(query)
+
+#     # Search the knowledge base in Qdrant
+#     search_result = qdrant_client.search(
+#         collection_name=collection_name,
+#         query_vector=query_embedding,
+#         limit=5  # Return top 5 relevant results
+#     )
+
+#     # Format the results
+#     results = [{"text": hit.payload["text"], "score": hit.score} for hit in search_result]
+
+#     # Prepare the LangChain LLM chain
+#     llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
+#     template = ChatPromptTemplate.from_messages([
+#         ("system", "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."),
+#         ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.")
+#     ])
+#     chain = LLMChain(llm=llm, prompt=template)
+
+#     # Construct the input for LangChain, including session context
+#     context = "\n".join([f"Query: {interaction['query']}\nResponse: {interaction['gpt_response']}" for interaction in session["context"]])
+#     information = "\n".join([f"- {result['text']}" for result in results])
+#     print(context,"CONTEXT")
+#     chain_input = {
+#         "query": query,
+#         "context": context,  # Pass previous session context
+#         "information": information
+#     }
+
+#     # Get the GPT response using LangChain
+#     gpt_response = chain.run(chain_input)
+#     return gpt_response
+class QueryRequest(BaseModel):
+    query: str
 class KnowledgeBaseArgs(BaseModel):
     query: str
     session_id: str
@@ -239,14 +389,15 @@ async def root():
 
 @app.post("/addToKnowledgeBase/")
 async def add_to_knowledge_base(file: UploadFile = File(...)):
-    # Save the uploaded file temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename.split('.')[-1]) as temp_file:
+    # Save the uploaded file temporarily with the correct extension
+    file_extension = f".{file.filename.split('.')[-1]}"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
         content = await file.read()
         temp_file.write(content)
         temp_file_path = temp_file.name
 
     # Use LlamaParse to extract text from the document
-    parser = LlamaParse(api_key=LLAMA_PARSE_API, result_type="text")
+    parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
     parsed_document = parser.load_data(temp_file_path)
 
     filename = file.filename
@@ -261,7 +412,9 @@ async def add_to_knowledge_base(file: UploadFile = File(...)):
             is_separator_regex=False,
         )
 
-        chunks = text_splitter.split_text(page.text)
+        chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
+        if not chunks:
+            continue 
         embeddings = embedding_function.embed_documents(chunks)
 
         # Prepare data with unique IDs
@@ -280,13 +433,17 @@ async def add_to_knowledge_base(file: UploadFile = File(...)):
         ]
         all_points.extend(points)
 
-    # Insert data into Qdrant
-    qdrant_client.upsert(
-        collection_name=collection_name,
-        points=all_points
-    )
+    # Only upsert if there are points to insert
+    if all_points:
+        qdrant_client.upsert(
+            collection_name=collection_name,
+            points=all_points
+        )
+        return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
+    else:
+        return {"status": "error", "message": "No data extracted from the document."}
 
-    return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
+
 # @app.post("/addToKnowledgeBase/")
 # async def add_to_knowledge_base(file: UploadFile = File(...)):
 #     if file.content_type != 'application/pdf':
