@@ -364,42 +364,6 @@ async def add_to_knowledge_base(file: UploadFile = File(...)):
         return {"status": "error", "message": "No data extracted from the document."}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.post("/startSession/")
 async def start_session():
     session_id = create_session()

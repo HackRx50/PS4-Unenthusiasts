@@ -1,4 +1,5 @@
-/.venv
+venv/
 /__pycache__
+/pdfs
 .env
-.venv
+/venv
