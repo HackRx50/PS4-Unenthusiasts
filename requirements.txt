@@ -14,6 +14,6 @@ bson
 pymongo
 langchain-community
 langchain_core
- llama-index-core 
- llama-parse 
- llama-index-readers-file
+llama-index-core 
+llama-parse 
+llama-index-readers-file
