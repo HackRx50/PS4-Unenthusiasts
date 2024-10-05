@@ -6,6 +6,8 @@ from services.semanicCaching import SemanticCacheService
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 from llama_parse import LlamaParse
+from qdrant_client.http.models import PointStruct
+
 import uuid
 import os
 import tempfile as temp_file
@@ -45,7 +47,7 @@ class KnowledgeBaseService:
         results = [{"text": hit.payload["text"], "score": hit.score} for hit in search_result]
         information = "\n".join([f"- {result['text']}" for result in results])
     
-        user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
+        user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.If you cannot find the answer to the question, say Sorry, can't find the answer in the Knowledge Base"
 
         messages = [{"role": "system", "content": system_prompt}]
         for message in context_messages:

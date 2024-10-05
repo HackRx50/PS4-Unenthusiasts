@@ -1,3 +1,4 @@
+import uuid
 from qdrant_client.http.models import PointStruct
 
 class SemanticCacheService:
