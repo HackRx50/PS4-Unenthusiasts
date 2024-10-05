@@ -12,5 +12,5 @@ async def upload_document(file: UploadFile = File(...)):
 
 @chat_router.post("/chat")
 def search_knowledge_base(request: QueryRequest):
-    result = knowledgebase_service.search_knowledge_base(request.query)
+    result = knowledgebase_service.search_knowledge_base(request.query,request.session_id)
     return {"result": result}

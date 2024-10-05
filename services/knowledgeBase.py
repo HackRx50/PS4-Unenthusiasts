@@ -1,3 +1,5 @@
+# knowledge_base_service.py
+
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct
 from fastapi import APIRouter, UploadFile, File
@@ -6,11 +8,13 @@ from llama_parse import LlamaParse
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import uuid
 import os
+from services.database import DatabaseService
+from services.llm import LLMService  
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DB_URL = os.getenv("DB_URL")
 DB_API_KEY = os.getenv("DB_API_KEY")
-LLAMA_CLOUD_API_KEY=os.getenv("LLAMA_CLOUD_API_KEY")
+LLAMA_CLOUD_API_KEY = os.getenv("LLAMA_CLOUD_API_KEY")
 
 def get_embedding_function():
     embeddings = OpenAIEmbeddings(
@@ -20,34 +24,57 @@ def get_embedding_function():
     )
     return embeddings
 
-
 class KnowledgeBaseService:
-    def __init__(self,collection_name: str):
+    def __init__(self, collection_name: str):
         self.client = QdrantClient(
-                url=DB_URL,
-                api_key=DB_API_KEY
-            )
+            url=DB_URL,
+            api_key=DB_API_KEY
+        )
         self.collection_name = collection_name
         self.create_collection()
-        
+        self.llm_service = LLMService(api_key=OPENAI_API_KEY)  
+        self.database = DatabaseService()
 
     def create_collection(self):
         collections = self.client.get_collections().collections
         if not any(collection.name == self.collection_name for collection in collections):
             self.client.create_collection(collection_name=self.collection_name)
 
-    def search_knowledge_base(self, query_vector, limit: int = 5):
-        return self.client.search(collection_name=self.collection_name, query_vector=query_vector, limit=limit)
+    def search_knowledge_base(self, query, session_id):
+        if not session_id or not self.database.find_session_by_id(session_id):
+            session_id = self.database.create_session()
+            print(f"New session created with ID: {session_id}")
 
-    async def upsert_knowledge_base(self,file: UploadFile = File(...)):
-    
+        system_prompt = (
+            "You are a knowledgeable assistant with access to a Knowledge Base. "
+            "Your task is to provide the most relevant and helpful information to the user based on their query."
+        )
+
+        session_data = self.database.find_session_by_id(session_id)
+        context_messages = session_data.get("messages", [])
+
+        user_message = {"role": "user", "content": query}
+        context_messages.append(user_message)
+
+        messages = [{"role": "system", "content": system_prompt}] 
+
+        gpt_response = self.llm_service.generate_response(messages, context_messages)  
+
+        self.database.update_session_context(session_id, {
+            "query": query,
+            "gpt_response": gpt_response,
+            "messages": context_messages
+        })
+
+        return {"gpt_response": gpt_response}
+
+    async def upsert_knowledge_base(self, file: UploadFile = File(...)):
         file_extension = f".{file.filename.split('.')[-1]}"
         with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
             content = await file.read()
             temp_file.write(content)
             temp_file_path = temp_file.name
 
-        
         parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
         parsed_document = parser.load_data(temp_file_path)
 
@@ -68,7 +95,6 @@ class KnowledgeBaseService:
                 continue 
             embeddings = embedding_function.embed_documents(chunks)
 
-            
             points = [
                 PointStruct(
                     id=str(uuid.uuid4()),
@@ -84,7 +110,6 @@ class KnowledgeBaseService:
             ]
             all_points.extend(points)
 
-        
         if all_points:
             self.client.upsert(
                 collection_name=self.collection_name,
@@ -93,8 +118,3 @@ class KnowledgeBaseService:
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
         else:
             return {"status": "error", "message": "No data extracted from the document."}
-
-
-
-
-        
