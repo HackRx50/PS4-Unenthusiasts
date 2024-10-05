@@ -5,7 +5,7 @@ import os
 DB_URL = os.getenv("DB_URL")
 DB_API_KEY = os.getenv("DB_API_KEY")
 
-class VectorDatabaseService:
+class VectorContextDatabaseService:
     def __init__(self, collection_name: str):
         self.client = QdrantClient(url=DB_URL, api_key=DB_API_KEY)
         self.collection_name = collection_name

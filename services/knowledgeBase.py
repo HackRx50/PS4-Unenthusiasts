@@ -1,6 +1,6 @@
 from fastapi import UploadFile, File
-from services.vectorDatabase import VectorDatabaseService
-from services.database import DatabaseService
+from services.vectorDatabase import VectorContextDatabaseService
+from services.contextDatabase import ContextDatabaseService
 from services.llm import LLMService  
 from services.semanicCaching import SemanticCacheService
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -23,9 +23,9 @@ def get_embedding_function():
 
 class KnowledgeBaseService:
     def __init__(self, collection_name: str):
-        self.vector_db = VectorDatabaseService(collection_name)
+        self.vector_db = VectorContextDatabaseService(collection_name)
         self.llm_service = LLMService(api_key=OPENAI_API_KEY)  
-        self.database = DatabaseService()
+        self.database = ContextDatabaseService()
         self.semantic_cache = SemanticCacheService(get_embedding_function, self.vector_db.client, collection_name)
 
     def search_knowledge_base(self, query, session_id):
