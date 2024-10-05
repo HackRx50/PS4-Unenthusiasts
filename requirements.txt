@@ -10,7 +10,7 @@ langchain
 openai
 faiss-cpu
 tiktoken
-# bson
 pymongo
 langchain-community
 langchain_core
+pika
