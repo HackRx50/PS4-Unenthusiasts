@@ -12,6 +12,7 @@ class LLMService:
 
         response = self.client.chat.completions.create(
             model="gpt-4o-mini", 
-            messages=messages
+            messages=messages,
+            
         )
         return response.choices[0].message.content
