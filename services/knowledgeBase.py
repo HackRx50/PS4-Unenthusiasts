@@ -45,7 +45,6 @@ class KnowledgeBaseService:
         query_embedding = self._query_embedding(query)
         search_result = self.vector_db.search(query_embedding, limit=5)
 
-        print(f"Search results: {search_result}")
         results = [{"text": hit.payload["text"], "score": hit.score} 
                 for hit in search_result if "text" in hit.payload]
         information = "\n".join([f"- {result['text']}" for result in results])
