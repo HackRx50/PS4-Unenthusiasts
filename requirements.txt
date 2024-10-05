@@ -10,10 +10,11 @@ langchain
 openai
 faiss-cpu
 tiktoken
-# bson
 pymongo
 langchain-community
 langchain_core
 llama-index-core 
 llama-parse 
 llama-index-readers-file
+
+pika
