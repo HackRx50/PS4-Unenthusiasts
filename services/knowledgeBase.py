@@ -31,20 +31,12 @@ class KnowledgeBaseService:
         
 
     def search_knowledge_base(self, query):
-       
-
         cache_results = self.semantic_cache.search_cache(query)
-
-
         if cache_results is not None:
             return cache_results
-
-
-    
-
         query_embedding = self._query_embedding(query)
         search_result = self.vector_db.search(query_embedding, limit=5)
-
+        print(search_result)
         results = [{"text": hit.payload["text"], "score": hit.score} 
                 for hit in search_result if "text" in hit.payload]
         information = "\n".join([f"- {result['text']}" for result in results])
@@ -57,11 +49,9 @@ class KnowledgeBaseService:
     def query_knowledge_base(self, query: str, session_id: str = None):
         if not session_id or not self.database.find_session_by_id(session_id):
             session_id = self.database.create_session()
-
         system_prompt = (
-            "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."
+            "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         )
-
         session_data = self.database.find_session_by_id(session_id)
         context_messages = session_data.get("context", [])
         information = self.search_knowledge_base(query)
