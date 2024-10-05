@@ -20,6 +20,7 @@ import os
 from dotenv import load_dotenv
 from langchain.agents import Tool, AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
+import openai
 import json
 from langchain_core.tools import StructuredTool
 import uvicorn
@@ -189,7 +190,7 @@ def search_knowledge_base(query: str, session_id: str) -> str:
     llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
     template = ChatPromptTemplate.from_messages([
         ("system", "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."),
-        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.")
+        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information in those contexts and If you cannot find the answer to the question, say Sorry can\'t find the answer in the Knowledge Base")
     ])
     chain = LLMChain(llm=llm, prompt=template)
 
