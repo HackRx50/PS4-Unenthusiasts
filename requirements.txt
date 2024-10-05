@@ -5,12 +5,12 @@ transformers
 torch
 qdrant-client
 python-dotenv
-pydantic
+# pydantic
 langchain
 openai
 faiss-cpu
 tiktoken
-bson
+# bson
 pymongo
 langchain-community
 langchain_core

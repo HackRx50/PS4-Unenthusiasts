@@ -433,6 +433,7 @@ async def query_knowledge_base(
 
     
     gpt_response = agent.run(input=input_text)
+    gpt_response=openai_chat(request.query)
 
     
     update_session(session_id, {"query": request.query, "gpt_response": gpt_response})
@@ -442,3 +443,16 @@ async def query_knowledge_base(
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=3000)
+
+
+
+
+#TODO: DONT answer irrelevant questions / guardrails -> prompt moodify + research 
+#TODO: improve latency -> async task + react only for tasks 
+#TODO: actions in background -> async > messaging queue
+#TODO:  AUTH -> refreshToken acccessToken (signup login)
+#TODO:  Soure ( pagenumber )/ References (Quote the line with pagenumber ) -> 
+#TODO: GROQ 
+# TODO: restructure the code
+#TODO: ratelimit 
+#TODO: 
