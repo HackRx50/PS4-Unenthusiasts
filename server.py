@@ -23,7 +23,8 @@ from langchain.chat_models import ChatOpenAI
 import json
 from langchain_core.tools import StructuredTool
 import uvicorn
-
+import nest_asyncio
+nest_asyncio.apply()
 
 
 
@@ -53,8 +54,10 @@ model = BertModel.from_pretrained('bert-base-uncased')
 
 qdrant_client = QdrantClient(
     url=DB_URL,
-    api_key=DB_API_KEY
+    api_key=DB_API_KEY,
+    timeout=300
 )
+
 collection_name = "knowledge_base"
 
 
@@ -108,7 +111,7 @@ def update_session(session_id: str, new_context: str):
 class SemanticCache:
     def __init__(self, embedding_function, threshold=0.35):
         self.encoder = embedding_function()
-        self.cache_client = qdrant_client  
+        self.cache_client = QdrantClient(":memory:") 
         self.cache_collection_name = "cache"
 
         
@@ -151,7 +154,6 @@ class SemanticCache:
             collection_name=self.cache_collection_name,
             points=[point]
         )
-
 
 semantic_cache = SemanticCache(embedding_function=get_embedding_function)
 
