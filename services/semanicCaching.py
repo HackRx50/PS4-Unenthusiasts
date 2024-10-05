@@ -34,13 +34,15 @@ class SemanticCacheService:
             query_vector=embedding, 
             limit=1
         )
+        print('Cache Results:', cache_results)
         if cache_results:
             for result in cache_results:
-                if float(result.score) <= float(self.threshold):
+                if float(result.score) >= float(self.threshold):
                     print('Answer recovered from Cache.')
                     print(f'Found cache with score {result.score:.3f}')
                     return result.payload["text"]
-        return None
+        else:
+            return None
 
     def add_to_cache(self, question, response_text):
         point_id = str(uuid.uuid4())
