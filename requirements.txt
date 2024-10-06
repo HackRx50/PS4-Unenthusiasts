@@ -1,4 +1,4 @@
-fastapi
+fastapi[standard]
 uvicorn
 PyPDF2
 transformers
@@ -13,5 +13,13 @@ tiktoken
 pymongo
 langchain-community
 langchain_core
+<<<<<<< HEAD
 pika
 pydantic_settings
+=======
+llama-index-core 
+llama-parse 
+llama-index-readers-file
+
+pika
+>>>>>>> 338d5e8c0fe4d3331c81ad43d29c11c8184403ae

@@ -1,9 +1,12 @@
 from pymongo import MongoClient
 import uuid
 import os
+from settings import Settings
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+env = Settings()
+
+MONGO_URI = env.mongo_uri
+MONGO_DB_NAME = env.mongo_db_name
 class ContextDatabaseService:
     def __init__(self):
         self.client = MongoClient(MONGO_URI)

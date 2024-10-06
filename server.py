@@ -20,10 +20,12 @@ import os
 from dotenv import load_dotenv
 from langchain.agents import Tool, AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
+import openai
 import json
 from langchain_core.tools import StructuredTool
 import uvicorn
-
+import nest_asyncio
+nest_asyncio.apply()
 
 
 
@@ -56,6 +58,7 @@ qdrant_client = QdrantClient(
     api_key=DB_API_KEY,
     timeout=300
 )
+
 collection_name = "knowledge_base"
 
 
@@ -109,7 +112,7 @@ def update_session(session_id: str, new_context: str):
 class SemanticCache:
     def __init__(self, embedding_function, threshold=0.35):
         self.encoder = embedding_function()
-        self.cache_client = qdrant_client  
+        self.cache_client = QdrantClient(":memory:") 
         self.cache_collection_name = "cache"
 
         
@@ -153,7 +156,6 @@ class SemanticCache:
             points=[point]
         )
 
-
 semantic_cache = SemanticCache(embedding_function=get_embedding_function)
 
 
@@ -188,7 +190,7 @@ def search_knowledge_base(query: str, session_id: str) -> str:
     llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
     template = ChatPromptTemplate.from_messages([
         ("system", "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed."),
-        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information.")
+        ("human", "Given the query: '{query}', the previous context: '{context}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information in those contexts and If you cannot find the answer to the question, say Sorry can\'t find the answer in the Knowledge Base")
     ])
     chain = LLMChain(llm=llm, prompt=template)
 
@@ -363,42 +365,6 @@ async def add_to_knowledge_base(file: UploadFile = File(...)):
         return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
     else:
         return {"status": "error", "message": "No data extracted from the document."}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @app.post("/startSession/")

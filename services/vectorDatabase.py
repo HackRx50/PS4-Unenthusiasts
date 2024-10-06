@@ -1,10 +1,10 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct
 import os
-
-DB_URL = os.getenv("DB_URL")
-DB_API_KEY = os.getenv("DB_API_KEY")
-
+from settings import Settings
+env=Settings();
+DB_URL = env.db_url
+DB_API_KEY = env.db_api_key
 class VectorContextDatabaseService:
     def __init__(self, collection_name: str):
         self.client = QdrantClient(url=DB_URL, api_key=DB_API_KEY)
