@@ -1,3 +1,4 @@
+import tempfile as temp_file
 from fastapi import UploadFile, File
 from services.vectorDatabase import VectorContextDatabaseService
 from services.contextDatabase import ContextDatabaseService
@@ -9,10 +10,11 @@ from llama_parse import LlamaParse
 from qdrant_client.http.models import PointStruct
 import uuid
 import os
-import tempfile as temp_file
+from settings import Settings
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-LLAMA_CLOUD_API_KEY = os.getenv("LLAMA_CLOUD_API_KEY")
+env=Settings()
+OPENAI_API_KEY = env.openai_api_key
+LLAMA_CLOUD_API_KEY = env.llama_cloud_api_key
 
 def get_embedding_function():
     embeddings = OpenAIEmbeddings(
@@ -86,13 +88,15 @@ class KnowledgeBaseService:
 
     async def upsert_knowledge_base(self, file: UploadFile = File(...)):
         file_extension = f".{file.filename.split('.')[-1]}"
-        with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+        print(file_extension,"FILE extension")
+        temp_file_path = None
+        with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as tempFile:
             content = await file.read()
-            temp_file.write(content)
-            temp_file_path = temp_file.name
+            tempFile.write(content)
+            temp_file_path = tempFile.name
 
         parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
-        parsed_document = parser.load_data(temp_file_path)
+        parsed_document =await parser.aload_data(temp_file_path)
 
         filename = file.filename
         embedding_function = get_embedding_function()
