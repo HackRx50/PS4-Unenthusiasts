@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from services.knowledgeBase import KnowledgeBaseService
 from models.request_models import QueryRequest
-
+from services.chatbot import Chatbot
 
 chat_router = APIRouter()
 knowledgebase_service = KnowledgeBaseService(collection_name="knowledge_base")
+chatbot = Chatbot("chatbot")
 
 @chat_router.post("/addToKnowledgeBase")
 async def upload_document(file: UploadFile = File(...)):
@@ -21,5 +22,5 @@ async def upload_document(file: UploadFile = File(...)):
 
 @chat_router.post("/chat")
 def search_knowledge_base(request: QueryRequest):
-    result = knowledgebase_service.query_knowledge_base(request.query,request.session_id)
+    result = chatbot.answer(request.query,request.session_id)
     return {"result": result}

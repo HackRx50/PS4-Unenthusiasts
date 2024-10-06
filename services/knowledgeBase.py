@@ -27,25 +27,11 @@ def get_embedding_function():
 class KnowledgeBaseService:
     def __init__(self, collection_name: str):
         self.vector_db = VectorContextDatabaseService(collection_name)
-        self.llm_service = LLMService(api_key=OPENAI_API_KEY)  
+        self.llm_service = LLMService()  
         self.database = ContextDatabaseService()
         self.semantic_cache = SemanticCacheService( collection_name,float(0.35))
         
 
-    # def search_knowledge_base(self, query):
-    #     cache_results = self.semantic_cache.search_cache(query)
-    #     if cache_results is not None:
-    #         return cache_results
-    #     query_embedding = self._query_embedding(query)
-    #     search_result = self.vector_db.search(query_embedding, limit=5)
-    #     print(search_result)
-    #     results = [{"text": hit.payload["text"], "score": hit.score} 
-    #             for hit in search_result if "text" in hit.payload]
-    #     information = "\n".join([f"- {result['text']}" for result in results])
-
-    #     self.semantic_cache.add_to_cache(query, information)
-
-    #     return information
     def search_knowledge_base(self, query):
         cache_results = self.semantic_cache.search_cache(query)
         if cache_results is not None:

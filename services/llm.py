@@ -1,10 +1,11 @@
 
 from openai import OpenAI
-
+from settings import Settings
+env=Settings();
+LLM_API_KEY=env.openai_api_key
 class LLMService:
-    def __init__(self, api_key: str):
-        self.client = OpenAI()
-        self.api_key = api_key
+    def __init__(self ):
+        self.client = OpenAI(api_key=LLM_API_KEY)
 
     def generate_response(self, messages, context_messages=None):
         if context_messages:
