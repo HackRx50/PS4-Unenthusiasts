@@ -10,6 +10,8 @@ from qdrant_client.http.models import PointStruct
 import uuid
 import os
 import tempfile as temp_file
+import nest_asyncio
+nest_asyncio.apply()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LLAMA_CLOUD_API_KEY = os.getenv("LLAMA_CLOUD_API_KEY")
@@ -115,57 +117,116 @@ class KnowledgeBaseService:
 
         return gpt_response
     
-
-
-
     async def upsert_knowledge_base(self, file: UploadFile = File(...)):
-        file_extension = f".{file.filename.split('.')[-1]}"
-        with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
-            content = await file.read()
-            temp_file.write(content)
-            temp_file_path = temp_file.name
+            file_extension = f".{file.filename.split('.')[-1]}"
+            with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+                content = await file.read()
+                temp_file.write(content)
+                temp_file_path = temp_file.name
 
-        parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
-        parsed_document = parser.load_data(temp_file_path)
+            parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
+            parsed_document = parser.load_data(temp_file_path)
 
-        filename = file.filename
-        embedding_function = get_embedding_function()
-        all_points = []
+            filename = file.filename
+            embedding_function = get_embedding_function()
+            all_points = []
 
-        for page_number, page in enumerate(parsed_document, start=1):
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=800,
-                chunk_overlap=20,
-                length_function=len,
-                is_separator_regex=False,
-            )
-
-            chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
-            if not chunks:
-                continue 
-            embeddings = embedding_function.embed_documents(chunks)
-
-            points = [
-                PointStruct(
-                    id=str(uuid.uuid4()),
-                    vector=embedding,
-                    payload={
-                        "text": chunk,
-                        "filename": filename,
-                        "page_number": page_number,
-                        "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}"
-                    }
+            for page_number, page in enumerate(parsed_document, start=1):
+                text_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=800,
+                    chunk_overlap=20,
+                    length_function=len,
+                    is_separator_regex=False,
                 )
-                for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
-            ]
-            all_points.extend(points)
 
-        if all_points:
-            self.vector_db.upsert(all_points)
-            self.semantic_cache = SemanticCacheService("cache",float(0.35))
-            return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
-        else:
-            return {"status": "error", "message": "No data extracted from the document."}
+                chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
+                if not chunks:
+                    continue 
+                embeddings = embedding_function.embed_documents(chunks)
+
+                points = [
+                    PointStruct(
+                        id=str(uuid.uuid4()),
+                        vector=embedding,
+                        payload={
+                            "text": chunk,
+                            "filename": filename,
+                            "page_number": page_number,
+                            "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}"
+                        }
+                    )
+                    for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
+                ]
+                all_points.extend(points)
+
+            if all_points:
+                self.vector_db.upsert(all_points)
+                self.semantic_cache = SemanticCacheService("cache",float(0.35))
+                return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
+            else:
+                return {"status": "error", "message": "No data extracted from the document."}
+
+    # async def upsert_knowledge_base(self, file: UploadFile = File(...)):
+    #     # Extract the file extension
+    #     file_extension = f".{file.filename.split('.')[-1]}"
+
+    #     # Create a temporary file and save the file content into it
+    #     with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file_handle:
+    #         content = await file.read()
+    #         temp_file_handle.write(content)
+    #         temp_file_path = temp_file_handle.name  # Save the temporary file path
+        
+    #     try:
+    #         # Use the temporary file path in the document parser
+    #         print("I AM HERE ")
+    #         parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
+    #         parsed_document = parser.load_data(temp_file_path)
+    #         print("I AM HERE 2 ")
+
+    #         filename = file.filename
+    #         embedding_function = get_embedding_function()
+    #         all_points = []
+
+    #         # Process each page in the document
+    #         for page_number, page in enumerate(parsed_document, start=1):
+    #             text_splitter = RecursiveCharacterTextSplitter(
+    #                 chunk_size=800,
+    #                 chunk_overlap=20,
+    #                 length_function=len,
+    #                 is_separator_regex=False,
+    #             )
+
+    #             chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
+    #             if not chunks:
+    #                 continue
+    #             embeddings = embedding_function.embed_documents(chunks)
+
+    #             points = [
+    #                 PointStruct(
+    #                     id=str(uuid.uuid4()),
+    #                     vector=embedding,
+    #                     payload={
+    #                         "text": chunk,
+    #                         "filename": filename,
+    #                         "page_number": page_number,
+    #                         "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}"
+    #                     }
+    #                 )
+    #                 for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
+    #             ]
+    #             all_points.extend(points)
+
+    #         # Upsert data into vector database if points are available
+    #         if all_points:
+    #             self.vector_db.upsert(all_points)
+    #             self.semantic_cache = SemanticCacheService("cache", float(0.35))
+    #             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
+    #         else:
+    #             return {"status": "error", "message": "No data extracted from the document."}
+    #     finally:
+    #         # Ensure the temporary file is deleted after processing
+    #         os.remove(temp_file_path)
+
         
     def _query_embedding(self, query):
         return get_embedding_function().embed_query(query)

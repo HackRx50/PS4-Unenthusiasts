@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from services.knowledgeBase import KnowledgeBaseService
 from models.request_models import QueryRequest
 
@@ -8,7 +8,18 @@ knowledgebase_service = KnowledgeBaseService(collection_name="knowledge_base")
 
 @chat_router.post("/addToKnowledgeBase")
 async def upload_document(file: UploadFile = File(...)):
-    return knowledgebase_service.upsert_knowledge_base(file)
+    return await knowledgebase_service.upsert_knowledge_base(file)
+# @chat_router.post("/addToKnowledgeBase")
+# async def upload_document(file: UploadFile = File(...)):
+#     try:
+#         # Call the knowledge base service to upsert the document
+#         result = await knowledgebase_service.upsert_knowledge_base(file)
+        
+#         # Return a success message with any details from the service
+#         return {"message": "File uploaded successfully", "details": result}
+#     except Exception as e:
+#         # Handle possible errors and return an error message
+#         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
 
 @chat_router.post("/chat")
 def search_knowledge_base(request: QueryRequest):
