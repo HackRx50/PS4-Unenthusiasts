@@ -1,5 +1,6 @@
 import tempfile as temp_file
 from fastapi import UploadFile, File
+from services.pineCone import VectorPineConeDatabaseService
 from services.vectorDatabase import VectorContextDatabaseService
 from services.contextDatabase import ContextDatabaseService
 from services.llm import LLMService  
@@ -7,7 +8,7 @@ from services.semanicCaching import SemanticCacheService
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 from llama_parse import LlamaParse
-from qdrant_client.http.models import PointStruct
+from qdrant_client.http.models import PointStruct,models
 import uuid
 import os
 from settings import Settings
@@ -26,13 +27,58 @@ def get_embedding_function():
 
 class KnowledgeBaseService:
     def __init__(self, collection_name: str):
-        self.vector_db = VectorContextDatabaseService(collection_name)
+        self.vector_db = VectorPineConeDatabaseService(collection_name)
         self.llm_service = LLMService()  
         self.database = ContextDatabaseService()
         self.semantic_cache = SemanticCacheService( collection_name,float(0.35))
         
 
-    def search_knowledge_base(self, query,document_id):
+    # def search_knowledge_base(self, query,document_id):
+    #     cache_results = self.semantic_cache.search_cache(query)
+    #     if cache_results is not None:
+    #         return cache_results
+
+    #     query_embedding = self._query_embedding(query)
+
+    #     # Perform a filtered search by document_id before limiting the results
+    #     if document_id:
+    #         # Filter vectors only related to the document_id first
+    #         # filter_criteria = {"must": [{"key": "document_id", "match": document_id}]}
+    #         search_result = self.vector_db.search(query_embedding,limit=5,document_id=document_id)
+    #     else:
+    #         # If no document_id provided, perform a general search
+    #         search_result = self.vector_db.search(query_embedding, limit=5)
+    #     print(search_result)
+    #     # If no results are found, return a message
+    #     if not search_result or "matches" not in search_result or not search_result["matches"]:
+    #         return "Sorry, no relevant results found for the given document."
+
+    #     # Process the search results
+    #     results = [
+    #         {
+    #             "text": hit["metadata"].get("text", "No text available"),
+    #             "filename": hit["metadata"].get("filename", "Unknown file"),
+    #             "page_number": hit["metadata"].get("page_number", "Unknown page"),
+    #             "score": hit["score"]
+    #         }
+    #         for hit in search_result["matches"]
+    #     ]
+
+    #     # If we don't find any results after filtering, return an appropriate message
+    #     if not results:
+    #         return "Sorry, no relevant results found for the given document."
+
+    #     # Concatenate the results into a formatted string
+    #     information = "\n".join(
+    #         [f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in results]
+    #     )
+
+    #     # Add the query to the cache for future use
+    #     self.semantic_cache.add_to_cache(query, information)
+
+    #     return information
+    def search_knowledge_base(self, query, document_id):
+    # Check if the query is present in the cache
         cache_results = self.semantic_cache.search_cache(query)
         if cache_results is not None:
             return cache_results
@@ -41,29 +87,34 @@ class KnowledgeBaseService:
 
         # Perform a filtered search by document_id before limiting the results
         if document_id:
-            # Filter vectors only related to the document_id first
-            filter_criteria = {"must": [{"key": "document_id", "match": document_id}]}
-            search_result = self.vector_db.search(query_embedding, filter=filter_criteria, limit=5)
+            search_result = self.vector_db.search(query_embedding, limit=5, document_id=document_id)
         else:
-            # If no document_id provided, perform a general search
             search_result = self.vector_db.search(query_embedding, limit=5)
+
         print(search_result)
+
         # If no results are found, return a message
-        if not search_result:
+        if not search_result or "matches" not in search_result or not search_result["matches"]:
             return "Sorry, no relevant results found for the given document."
 
         # Process the search results
-        results = [
-            {
-                "text": hit.payload["text"],
-                "filename": hit.payload.get("filename", "Unknown file"),
-                "page_number": hit.payload.get("page_number", "Unknown page"),
-                "score": hit.score
-            }
-            for hit in search_result if "text" in hit.payload
-        ]
+        results = []
+        for hit in search_result["matches"]:
+            metadata = hit.get("metadata", {})  # Safely get metadata, or use an empty dictionary if None
+            text = metadata.get("text", "No text available")
+            filename = metadata.get("filename", "Unknown file")
+            page_number = metadata.get("page_number", "Unknown page")
+            score = hit.get("score", 0)
 
-        # If we don't find any results after filtering, return an appropriate message
+            # Add the result to the list
+            results.append({
+                "text": text,
+                "filename": filename,
+                "page_number": page_number,
+                "score": score
+            })
+
+        # If no results after processing, return an appropriate message
         if not results:
             return "Sorry, no relevant results found for the given document."
 
@@ -76,6 +127,7 @@ class KnowledgeBaseService:
         self.semantic_cache.add_to_cache(query, information)
 
         return information
+
 
 
         
@@ -159,17 +211,17 @@ class KnowledgeBaseService:
             embeddings = embedding_function.embed_documents(chunks)
 
             points = [
-                PointStruct(
-                    id=str(uuid.uuid4()),
-                    vector=embedding,
-                    payload={
-                        "text": chunk,
-                        "filename": filename,
-                        "page_number": page_number,
-                        "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
-                        "document_id": document_id
+                {
+                'id': str(uuid.uuid4()),  # Generate unique ID for each chunk
+                'values': embedding,  # Pinecone requires 'values' as the embedding
+                'metadata': {  # Metadata can be any additional data
+                    "text": chunk,
+                    "filename": filename,
+                    "page_number": page_number,
+                    "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
+                    "document_id": document_id
                     }
-                )
+                 }
                 for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
             ]
             all_points.extend(points)

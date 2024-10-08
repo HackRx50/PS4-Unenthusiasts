@@ -4,6 +4,7 @@ PyPDF2
 transformers
 torch
 qdrant-client
+pinecone-client[grpc]
 python-dotenv
 # pydantic
 langchain

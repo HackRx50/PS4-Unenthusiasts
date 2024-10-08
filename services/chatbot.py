@@ -8,10 +8,10 @@ class Chatbot:
     def __init__(self,name):
         self.name = name
         self.llm = LLMService()
-        self.kb=KnowledgeBaseService("knowledge_base")
+        self.kb=KnowledgeBaseService("knowledgebase")
         self.messageQueue = MessageQueueService(name, "localhost")
         
-    def answer(self, question,session_id):
+    def answer(self, question,session_id,document_id):
         res=self.llm.generate_response(messages=[
             {"role": "system", "content": """
              Identify where the query os the user is query or action
@@ -36,7 +36,7 @@ class Chatbot:
 
         response = None
         if res["isQuery"]:
-            response = self.kb.query_knowledge_base(res["query"],session_id)
+            response = self.kb.query_knowledge_base(res["query"],session_id,document_id)
         else:
             response="Action queued successfully"
 

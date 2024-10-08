@@ -10,7 +10,6 @@ class LoginRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str = Body(...)
-    session_id: Optional[str] = Query(None)
-    document_id: Optional[str] = Query(None)
+    document_id: Optional[str] = Body(...)
 
 

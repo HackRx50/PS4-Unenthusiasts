@@ -16,12 +16,14 @@ class VectorContextDatabaseService:
         if not any(collection.name == self.collection_name for collection in collections):
             self.client.create_collection(collection_name=self.collection_name)
 
-    def search(self, query_embedding, limit=5):
-        return self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_embedding,
-            limit=limit
+    def search(self, query_embedding, limit=5, filter=None):
+        return self.client.scroll(
+            collection_name=self.collection_name,  # Use 'vector' to specify the query embedding
+            limit=limit,
+            scroll_filter=filter,
+            with_vectors=True  # If you want to return vectors in the result
         )
+
 
     def upsert(self, points):
         self.client.upsert(
