@@ -46,15 +46,55 @@ class KnowledgeBaseService:
     #     self.semantic_cache.add_to_cache(query, information)
 
     #     return information
-    def search_knowledge_base(self, query):
+    
+    #----------------------------------------------------------------------------------------------
+    
+    # def search_knowledge_base(self, query):
+    #     cache_results = self.semantic_cache.search_cache(query)
+    #     if cache_results is not None:
+    #         return cache_results
+
+    #     query_embedding = self._query_embedding(query)
+    #     search_result = self.vector_db.search(query_embedding, limit=5)
+    #     print(search_result)
+
+    #     results = [
+    #         {
+    #             "text": hit.payload["text"],
+    #             "filename": hit.payload.get("filename", "Unknown file"),
+    #             "page_number": hit.payload.get("page_number", "Unknown page"),
+    #             "score": hit.score
+    #         }
+    #         for hit in search_result if "text" in hit.payload
+    #     ]
+
+    #     information = "\n".join([f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in results])
+
+    #     self.semantic_cache.add_to_cache(query, information)
+
+    #     return information
+    def search_knowledge_base(self, query, document_id=None):
+    # Check if the query already exists in cache
         cache_results = self.semantic_cache.search_cache(query)
         if cache_results is not None:
             return cache_results
 
         query_embedding = self._query_embedding(query)
-        search_result = self.vector_db.search(query_embedding, limit=5)
-        print(search_result)
 
+        # Perform a filtered search by document_id before limiting the results
+        if document_id:
+            # Filter vectors only related to the document_id first
+            filter_criteria = {"must": [{"key": "document_id", "match": document_id}]}
+            search_result = self.vector_db.search(query_embedding, filter=filter_criteria, limit=5)
+        else:
+            # If no document_id provided, perform a general search
+            search_result = self.vector_db.search(query_embedding, limit=5)
+        print(search_result)
+        # If no results are found, return a message
+        if not search_result:
+            return "Sorry, no relevant results found for the given document."
+
+        # Process the search results
         results = [
             {
                 "text": hit.payload["text"],
@@ -65,15 +105,24 @@ class KnowledgeBaseService:
             for hit in search_result if "text" in hit.payload
         ]
 
-        information = "\n".join([f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in results])
+        # If we don't find any results after filtering, return an appropriate message
+        if not results:
+            return "Sorry, no relevant results found for the given document."
 
+        # Concatenate the results into a formatted string
+        information = "\n".join(
+            [f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in results]
+        )
+
+        # Add the query to the cache for future use
         self.semantic_cache.add_to_cache(query, information)
 
         return information
 
+
         
 
-    def query_knowledge_base(self, query: str, session_id: str = None):
+    def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None):
         if not session_id or not self.database.find_session_by_id(session_id):
             session_id = self.database.create_session()
         # system_prompt = (
@@ -100,7 +149,7 @@ class KnowledgeBaseService:
         )
         session_data = self.database.find_session_by_id(session_id)
         context_messages = session_data.get("context", [])
-        information = self.search_knowledge_base(query)
+        information = self.search_knowledge_base(query,document_id=document_id)
         user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -118,53 +167,62 @@ class KnowledgeBaseService:
         return gpt_response
     
     async def upsert_knowledge_base(self, file: UploadFile = File(...)):
-            file_extension = f".{file.filename.split('.')[-1]}"
-            with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
-                content = await file.read()
-                temp_file.write(content)
-                temp_file_path = temp_file.name
+        document_id = str(uuid.uuid4())
+        file_extension = f".{file.filename.split('.')[-1]}"
+        
+        # Ensure you read the file content inside the 'with' block
+        content = await file.read()
 
-            parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
-            parsed_document = parser.load_data(temp_file_path)
+        # Create a temporary file and ensure the file path is accessible
+        with temp_file.NamedTemporaryFile(delete=False, suffix=file_extension) as temp:
+            temp.write(content)
+            temp_file_path = temp.name  # Save the temp file path
+        
+        # Now temp_file_path is accessible here
 
-            filename = file.filename
-            embedding_function = get_embedding_function()
-            all_points = []
+        parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
+        parsed_document = parser.load_data(temp_file_path)
 
-            for page_number, page in enumerate(parsed_document, start=1):
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=800,
-                    chunk_overlap=20,
-                    length_function=len,
-                    is_separator_regex=False,
+        filename = file.filename
+        embedding_function = get_embedding_function()
+        all_points = []
+
+        for page_number, page in enumerate(parsed_document, start=1):
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=800,
+                chunk_overlap=20,
+                length_function=len,
+                is_separator_regex=False,
+            )
+
+            chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
+            if not chunks:
+                continue 
+            embeddings = embedding_function.embed_documents(chunks)
+
+            points = [
+                PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=embedding,
+                    payload={
+                        "text": chunk,
+                        "filename": filename,
+                        "page_number": page_number,
+                        "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
+                        "document_id": document_id
+                    }
                 )
+                for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
+            ]
+            all_points.extend(points)
 
-                chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
-                if not chunks:
-                    continue 
-                embeddings = embedding_function.embed_documents(chunks)
+        if all_points:
+            self.vector_db.upsert(all_points)
+            self.semantic_cache = SemanticCacheService("cache", float(0.35))
+            return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
+        else:
+            return {"status": "error", "message": "No data extracted from the document."}
 
-                points = [
-                    PointStruct(
-                        id=str(uuid.uuid4()),
-                        vector=embedding,
-                        payload={
-                            "text": chunk,
-                            "filename": filename,
-                            "page_number": page_number,
-                            "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}"
-                        }
-                    )
-                    for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
-                ]
-                all_points.extend(points)
-
-            if all_points:
-                self.vector_db.upsert(all_points)
-                self.semantic_cache = SemanticCacheService("cache",float(0.35))
-                return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base."}
-            else:
-                return {"status": "error", "message": "No data extracted from the document."}
 
     # async def upsert_knowledge_base(self, file: UploadFile = File(...)):
     #     # Extract the file extension
