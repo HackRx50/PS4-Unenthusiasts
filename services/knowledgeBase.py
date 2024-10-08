@@ -87,7 +87,7 @@ class KnowledgeBaseService:
 
         # Perform a filtered search by document_id before limiting the results
         if document_id:
-            search_result = self.vector_db.search(query_embedding, limit=5, document_id=document_id)
+            search_result = self.vector_db.searchWithFilter(query_embedding, document_id,limit=5)
         else:
             search_result = self.vector_db.search(query_embedding, limit=5)
 

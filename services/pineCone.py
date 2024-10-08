@@ -25,18 +25,27 @@ class VectorPineConeDatabaseService:
                 ) 
             )
 
-    def search(self, query_embedding, limit=5, document_id=None):
+    def searchWithFilter(self, query_embedding, document_id,limit=5):
         index = self.client.Index(self.collection_name)
         return index.query(
+            namespace="knowledgebase",
             vector=query_embedding,  # Pass the query vector (embedding)
-            top_k=limit,  # Set the number of results to retrieve
-            namespace=self.collection_name,  # Use namespace to filter within a logical partition (equivalent to collection in Qdrant)
-            filter={
-                "document_id":{"$eq":document_id}
-                },# Apply metadata filtering if needed (optional)
+            top_k=limit,  # Set the number of results to retrieve  
+            filter={"document_id":{"$eq":document_id}},
             includeMetadata=True,
             # include_values=True
         )
+    
+    def search(self, query_embedding, limit=5):
+        index = self.client.Index(self.collection_name)
+        return index.query(
+            namespace="knowledgebase",
+            vector=query_embedding,  # Pass the query vector (embedding)
+            top_k=limit,  # Set the number of results to retrieve  
+            includeMetadata=True,
+            # include_values=True
+        )
+        
 
 
 
