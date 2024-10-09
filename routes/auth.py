@@ -48,32 +48,6 @@ async def change_tier(request: ChangeTierRequest):
     result = auth.change_tier(request.email, request.tier)
     return result
 
-# async def access_data(Authorization: str = Header(...)):
-#     if not Authorization:
-#         raise HTTPException(status_code=401, detail="Authorization header missing")
-
-#     try:
-        
-#         token = Authorization.split()[1]
-#         # Decode the JWT token
-#         print(token)
-#         decoded_token = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-#         print("DECODED TOKEN"+decoded_token)
-#         user_id = decoded_token['user_id']
-        
-#         print("DECODED USER ID"+user_id)
-
-#         # Check data access asynchronously
-#         result = await data_access.can_access_data(user_id)
-        
-
-#         if result["status"]:
-#             return result["user_id"]  
-#         else:
-#             raise HTTPException(status_code=429, detail=result["message"])  # Rate limit reached
-
-#     except jwt.InvalidTokenError:
-#         raise HTTPException(status_code=401, detail="Invalid token")
 
 
 def access_data(Authorization: str = Header(...)):
