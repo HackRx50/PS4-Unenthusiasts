@@ -4,7 +4,7 @@ from services.knowledgeBase import KnowledgeBaseService
 from tools.todo import add_todo_item, list_todo_items, update_todo_item, delete_todo_item
 
 
-kb=KnowledgeBaseService("knowledge_base")
+kb=KnowledgeBaseService("knowledgebase")
 
 class KnowledgeBaseArgs(BaseModel):
     query: str
