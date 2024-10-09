@@ -30,21 +30,21 @@ class VectorPineConeDatabaseService:
     def searchWithFilter(self, query_embedding, document_id,limit=5):
         index = self.client.Index(self.collection_name)
         return index.query(
-            # namespace="knowledgebase",
+            namespace="knowledgebase",
             vector=query_embedding,  # Pass the query vector (embedding)
             top_k=limit,  # Set the number of results to retrieve  
             filter={"document_id":{"$eq":document_id}},
-            includeMetadata=True,
+            include_metadata=True
             # include_values=True
         )
 
     def search(self, query_embedding, limit=5):
         index = self.client.Index(self.collection_name)
         return index.query(
-            # namespace="knowledgebase",
+            namespace="knowledgebase",
             vector=query_embedding,  # Pass the query vector (embedding)
             top_k=limit,  # Set the number of results to retrieve  
-            includeMetadata=True,
+            include_metadata=True
             # include_values=True
         )
         
@@ -54,7 +54,7 @@ class VectorPineConeDatabaseService:
     def upsert(self, points):
         index = self.client.Index(self.collection_name)
         index.upsert(
-            # namespace=self.collection_name,
+            namespace=self.collection_name,
             vectors=points,
             batch_size=50
         )
