@@ -5,11 +5,19 @@ from typing import Optional
 
 
 class LoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 class QueryRequest(BaseModel):
     query: str = Body(...)
-    document_id: Optional[str] = Body(...)
+    document_id: Optional[str] = Body(None)
 
 
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    
+class ChangeTierRequest(BaseModel):
+    email: str
+    tier: str

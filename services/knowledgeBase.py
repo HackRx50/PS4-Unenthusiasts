@@ -77,6 +77,7 @@ class KnowledgeBaseService:
     #     self.semantic_cache.add_to_cache(query, information)
 
     #     return information
+    
     def search_knowledge_base(self, query, document_id):
     # Check if the query is present in the cache
         cache_results = self.semantic_cache.search_cache(query)

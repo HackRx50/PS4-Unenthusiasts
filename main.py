@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routes.chat import chat_router
+from routes.auth import auth_router
 import multiprocessing
 import uvicorn
 from services.actions import ActionExecuter  
@@ -7,6 +8,7 @@ from services.actions import ActionExecuter
 app = FastAPI()
 
 app.include_router(chat_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def root():
