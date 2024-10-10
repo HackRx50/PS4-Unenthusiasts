@@ -11,7 +11,7 @@ class MessageQueueService:
 
     def publish_message(self, message: str):
         msg_id = str(uuid.uuid4())
-        
+        print(msg_id)
         properties = pika.BasicProperties(message_id=msg_id)
         self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=message, properties=properties)
         # self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=message)

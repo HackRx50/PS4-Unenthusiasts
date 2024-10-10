@@ -79,7 +79,7 @@ class ActionExecuter:
         
         ch.basic_ack(delivery_tag=method.delivery_tag) 
 
-    def process_message(self, body):
+    def process_message(self, body,properties):
         print(f"Received message: {body}")
 
 
@@ -89,9 +89,20 @@ class ActionExecuter:
             verbose=True,
             agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
         )
+        captured_output = []
+        for chunk in agent.stream(body):
+            captured_output.append(chunk)
+        combined_output = ''.join([str(chunk) for chunk in captured_output])
 
-        response = agent.run(body)
-        print(f"Processed message: {response}")
+        print("Full captured output:")
+        print(combined_output)
+        self.db_service.save_log(properties.message_id, combined_output)
+
+        # response = agent.run(body)
+        # print(f"Processed message: {response}")
+
+        return combined_output 
+        
 
     def start_consuming(self):
         self.message_queue.consume_message( callback=self.on_message)
