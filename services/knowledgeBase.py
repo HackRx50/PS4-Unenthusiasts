@@ -189,10 +189,14 @@ class KnowledgeBaseService:
             temp.write(content)
             temp_file_path = temp.name  # Save the temp file path
         
-        # Now temp_file_path is accessible here
-
+        # Parse the document
         parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
         parsed_document = await parser.aload_data(temp_file_path)
+
+        # Check if the document is blank or contains no meaningful text
+        all_text = " ".join(page.text for page in parsed_document).strip()
+        if not all_text or all_text == "NO_CONTENT_HERE":
+            return {"status": "error", "message": "The document is blank or contains no meaningful text."}
 
         filename = file.filename
         embedding_function = get_embedding_function()
@@ -213,26 +217,28 @@ class KnowledgeBaseService:
 
             points = [
                 {
-                'id': str(uuid.uuid4()),  # Generate unique ID for each chunk
-                'values': embedding,  # Pinecone requires 'values' as the embedding
-                'metadata': {  # Metadata can be any additional data
-                    "text": chunk,
-                    "filename": filename,
-                    "page_number": page_number,
-                    "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
-                    "document_id": document_id
+                    'id': str(uuid.uuid4()),  # Generate unique ID for each chunk
+                    'values': embedding,  # Pinecone requires 'values' as the embedding
+                    'metadata': {  # Metadata can be any additional data
+                        "text": chunk,
+                        "filename": filename,
+                        "page_number": page_number,
+                        "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
+                        "document_id": document_id
                     }
-                 }
+                }
                 for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
             ]
             all_points.extend(points)
-
+        
+        # Proceed with upserting if there are valid chunks
         if all_points:
             self.vector_db.upsert(all_points)
             self.semantic_cache = SemanticCacheService("cache", float(0.35))
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
         else:
             return {"status": "error", "message": "No data extracted from the document."}
+
 
 
     # async def upsert_knowledge_base(self, file: UploadFile = File(...)):
