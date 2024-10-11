@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from fastapi import FastAPI, Query, Body
-from typing import Optional
+from typing import List, Optional
 
 
 
@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str = Body(...)
-    document_id: Optional[str] = Body(None)
+    document_ids: Optional[List[str]] = Body(None)
 
 
 class RegisterRequest(BaseModel):

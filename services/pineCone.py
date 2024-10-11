@@ -63,13 +63,15 @@ class VectorPineConeDatabaseService:
             )
         
 
-    def searchWithFilter(self, query_embedding, document_id,limit=5):
+    def searchWithFilter(self, query_embedding, document_ids,limit=5):
         index = self.client.Index(self.collection_name)
+        if document_ids:
+            filter_condition = {"document_id": {"$in": document_ids}}  # Use `$in` for multiple IDs
         return index.query(
             namespace="knowledgebase",
             vector=query_embedding,  # Pass the query vector (embedding)
             top_k=limit,  # Set the number of results to retrieve  
-            filter={"document_id":{"$eq":document_id}},
+            filter=filter_condition,
             include_metadata=True
             # include_values=True
         )
