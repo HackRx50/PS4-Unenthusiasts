@@ -145,7 +145,7 @@ class KnowledgeBaseService:
                 Otherwise Follow the below Instructions-
             
 
-                Respond in a neat, readable markdown format using bullet points.
+            Respond in a neat, readable markdown format using bullet points.
               Follow these instructions:
               - Mention source at the end of the answer (NOTE - do not mention in any other place expect the end of answer)
               - Provide page number if available (look for numbers after document names)
