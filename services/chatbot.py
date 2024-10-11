@@ -39,17 +39,22 @@ class Chatbot:
              """
 
         messages = [{"role": "system", "content": system_prompt}]
+        context=[]
+
         for message in context_messages:
             messages.append({"role": "user", "content": message["query"]})
             messages.append({"role": "assistant", "content": message["gpt_response"]})
+            context.append({"role": "user", "content": message["query"]})
+            context.append({"role": "assistant", "content": message["gpt_response"]})
 
         messages.append({"role": "user", "content": question})
         res=self.llm.generate_response(messages=messages)
+        
         res=json.loads(res)
 
         response = None
         if res["isQuery"]:
-            response = self.kb.query_knowledge_base(res["query"],session_id,document_id)
+            response = self.kb.query_knowledge_base(res["query"],session_id,document_id,actual_query=question,context_messages=context)
         else:
             response={"gpt_response":"Action queued successfully"}
 

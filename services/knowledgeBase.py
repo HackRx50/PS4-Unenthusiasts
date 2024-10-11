@@ -9,6 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 from llama_parse import LlamaParse
 from qdrant_client.http.models import PointStruct,models
+from typing import List, Optional
 import uuid
 import os
 from settings import Settings
@@ -158,7 +159,7 @@ class KnowledgeBaseService:
 
         
 
-    def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None):
+    def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
         print("HELLO")
         if not session_id or not self.database.find_session_by_id(session_id):
             session_id = self.database.create_session()
@@ -179,8 +180,6 @@ class KnowledgeBaseService:
               - Express uncertainty if you're not sure about an answer
 '''
         )
-        session_data = self.database.find_session_by_id(session_id)
-        context_messages = session_data.get("context", [])
         startT=time.time();
         information = self.search_knowledge_base(query,document_id=document_id)
         endT=time.time();
@@ -190,16 +189,15 @@ class KnowledgeBaseService:
         user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
         print("HELLO1")
         messages = [{"role": "system", "content": system_prompt}]
-        for message in context_messages:
-            messages.append({"role": "user", "content": message["query"]})
-            messages.append({"role": "assistant", "content": message["gpt_response"]})
+        messages.extend(context_messages)
 
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
        
 
+
         self.database.update_session_context(session_id, {
-            "query": query,
+            "query": actual_query,
             "gpt_response": gpt_response,
         })
         print("HELLO2")
