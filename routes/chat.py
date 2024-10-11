@@ -7,6 +7,7 @@ from models.request_models import QueryRequest
 from services.chatbot import Chatbot
 from services.pineCone import VectorPineConeDatabaseService
 
+
 chat_router = APIRouter()
 knowledgebase_service = KnowledgeBaseService(collection_name="knowledgebase")
 chatbot = Chatbot("chatbot")
@@ -21,6 +22,16 @@ async def upload_document(file: UploadFile = File(...),user_id: str = Depends(ac
     try:
         print(f"User {user_id} is querying the knowledge base.")
         result = await knowledgebase_service.upsert_knowledge_base(file)
+        return {"message": "File uploaded successfully", "details": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
+    
+
+@chat_router.post("/v2/addToKnowledgeBase")
+async def upload_document(file: UploadFile = File(...),user_id: str = Depends(access_data)):
+    try:
+        print(f"User {user_id} is querying the knowledge base.")
+        result = await (file)
         return {"message": "File uploaded successfully", "details": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
@@ -48,6 +59,7 @@ async def get_log_status(message_id: str):
             raise HTTPException(status_code=404, detail="Log not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 
 

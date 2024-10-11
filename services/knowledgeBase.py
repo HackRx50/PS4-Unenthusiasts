@@ -9,9 +9,11 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 from llama_parse import LlamaParse
 from qdrant_client.http.models import PointStruct,models
+from services.docuementProcessor import DocumentProcessor
 import uuid
 import os
 from settings import Settings
+import time 
 
 env=Settings()
 OPENAI_API_KEY = env.openai_api_key
@@ -31,6 +33,7 @@ class KnowledgeBaseService:
         self.llm_service = LLMService()  
         self.database = ContextDatabaseService()
         self.semantic_cache = SemanticCacheService( collection_name,float(0.35))
+        self.docuemnt_processor=DocumentProcessor(self)
         
 
     # def search_knowledge_base(self, query,document_id):
@@ -79,18 +82,31 @@ class KnowledgeBaseService:
     #     return information
     
     def search_knowledge_base(self, query, document_id=None):
+
     # Check if the query is present in the cache
+        startcache=time.time()
         cache_results = self.semantic_cache.search_cache(query)
         if cache_results is not None:
             return cache_results
+        endcache=time.time()
+        durationcache=endcache-startcache
+        print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
 
         query_embedding = self._query_embedding(query)
+        start_time = time.time()
+
 
         # Perform a filtered search by document_id before limiting the results
         if document_id:
             search_result = self.vector_db.searchWithFilter(query_embedding, document_id,limit=5)
         else:
             search_result = self.vector_db.search(query_embedding, limit=5)
+
+        end_time = time.time()
+
+            # Calculate the duration
+        duration = end_time - start_time
+        print(f"Time taken to fetch from vector database: {duration:.4f} seconds")
 
         print(search_result)
 
@@ -125,7 +141,7 @@ class KnowledgeBaseService:
         )
 
         # Add the query to the cache for future use
-        self.semantic_cache.add_to_cache(query, information)
+        # self.semantic_cache.add_to_cache(query, information)
 
         return information
 
@@ -170,13 +186,87 @@ class KnowledgeBaseService:
 
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages, context_messages)
+       
+
         self.database.update_session_context(session_id, {
             "query": query,
             "gpt_response": gpt_response,
         })
 
         return gpt_response
-    
+    async def upload_file_to_knowledge_base(self,filename,document_id):
+
+        filePath = None
+        try:
+            with open(filename, "rb") as file:
+                filePath=file.name
+        except Exception as e:
+            print(f"Error in opening file {e}")
+        
+        if filePath is None:
+            return {"status": "error", "message": "The file was not found."}
+        
+        try:
+            parser = LlamaParse(api_key=LLAMA_CLOUD_API_KEY, result_type="text")
+            parsed_document = await parser.load_data(filePath)
+            all_text = " ".join(page.text for page in parsed_document).strip()
+            if not all_text or all_text == "NO_CONTENT_HERE":
+                return {"status": "error", "message": "The document is blank or contains no meaningful text."}
+
+            filename = file.filename
+            embedding_function = get_embedding_function()
+            all_points = []
+
+            for page_number, page in enumerate(parsed_document, start=1):
+                text_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=800,
+                    chunk_overlap=20,
+                    length_function=len,
+                    is_separator_regex=False,
+                )
+
+                chunks = [chunk for chunk in text_splitter.split_text(page.text) if chunk.strip()]
+                if not chunks:
+                    continue 
+                embeddings = embedding_function.embed_documents(chunks)
+
+                points = [
+                    {
+                        'id': str(uuid.uuid4()),  # Generate unique ID for each chunk
+                        'values': embedding,  # Pinecone requires 'values' as the embedding
+                        'metadata': {  # Metadata can be any additional data
+                            "text": chunk,
+                            "filename": filename,
+                            "page_number": page_number,
+                            "chunk_index": f"{filename}_page{page_number}_chunk{chunk_index}",
+                            "document_id": document_id
+                        }
+                    }
+                    for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings), start=1)
+                ]
+                all_points.extend(points)
+            
+            # Proceed with upserting if there are valid chunks
+            if all_points:
+                self.vector_db.upsert(all_points)
+                self.semantic_cache = SemanticCacheService("cache", float(0.35))
+                return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
+            else:
+                return {"status": "error", "message": "No data extracted from the document."}
+            
+        except Exception as e:
+            return {"status": "error", "message": f"An error occurred: {str(e)}"}
+
+
+
+
+
+
+        
+            
+
+
+
     async def upsert_knowledge_base(self, file: UploadFile = File(...)):
         document_id = str(uuid.uuid4())
         file_extension = f".{file.filename.split('.')[-1]}"
@@ -238,8 +328,7 @@ class KnowledgeBaseService:
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
         else:
             return {"status": "error", "message": "No data extracted from the document."}
-
-
+        
 
     # async def upsert_knowledge_base(self, file: UploadFile = File(...)):
     #     # Extract the file extension
@@ -305,3 +394,10 @@ class KnowledgeBaseService:
         
     def _query_embedding(self, query):
         return get_embedding_function().embed_query(query)
+    
+    def upload_docuemnt_to_docuemnt_storage(self,file):
+        self.docuemnt_processor.upload_document(file)
+
+    
+
+
