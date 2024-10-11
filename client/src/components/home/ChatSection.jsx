@@ -15,6 +15,13 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   useDisclosure,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -32,9 +39,9 @@ import axios from "axios";
 import { IoIosMic } from "react-icons/io";
 import { VscFileSubmodule } from "react-icons/vsc";
 import { FaCircle } from "react-icons/fa";
-
 import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
+import FileUploadStage from "./FileUploadStage";
 
 const sampleFileNames = [
   {
@@ -173,6 +180,29 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
       setSearchedFiles(files);
     }
   }, [searchQuery]);
+
+  const [fileUpload, setFileUpload] = useState(null);
+
+  const handleFileUpload = async () => {
+    let formData = new FormData();
+    formData.append("file", fileUpload);
+
+    const url = "http://localhost:8000/addToKnowledgeBase";
+
+    const response = await axios.post(url, formData, {
+      headers: {
+        Authorization: `Bearer ${user?.access_token}`,
+      },
+    });
+  };
+
+  const {
+    isOpen: isModalOpen,
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+  } = useDisclosure();
+
+  const finalRef = useRef(null);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -359,7 +389,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
         placement="right"
         onClose={onFilesViewClose}
         finalFocusRef={btnFilesViewRef}
-        zIndex={10000}
+        zIndex={4000}
       >
         <DrawerOverlay />
         <DrawerContent>
@@ -439,7 +469,14 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
           </DrawerBody>
           <DrawerFooter>
             <div className="flex w-full justify-end gap-3 items-center">
-              <Button variant="outline">Upload File</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onModalOpen();
+                }}
+              >
+                Upload File
+              </Button>
               <Button
                 colorScheme="blue"
                 onClick={() => {
@@ -457,6 +494,47 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+      <Modal
+        finalFocusRef={finalRef}
+        isOpen={isModalOpen}
+        onClose={onModalClose}
+        zIndex={6000}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Modal Title</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FileUploadStage file={fileUpload} setFile={setFileUpload} />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={() => {
+                setFileUpload(null);
+                onModalClose();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={() => {
+                if (fileUpload) {
+                  handleFileUpload();
+                  onFilesViewClose();
+                  onModalClose();
+                } else {
+                  alert("Please select a file to upload");
+                }
+              }}
+            >
+              Confirm
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
