@@ -5,7 +5,7 @@ from models.request_models import ChangeTierRequest, LoginRequest, RegisterReque
 from services.auth import Auth
 from services.dataAccess import DataAccess
 from settings import Settings
-env=Settings();
+env=Settings()
 
 
 JWT_SECRET = env.jwt_secret_key
@@ -17,7 +17,6 @@ data_access = DataAccess()
 
 @auth_router.post('/register')
 async def register(request: RegisterRequest):
-    # Extract fields from the request body
     username = request.username
     email = request.email
     password = request.password
@@ -47,8 +46,6 @@ async def login(request: LoginRequest):
 async def change_tier(request: ChangeTierRequest):
     result = auth.change_tier(request.email, request.tier)
     return result
-
-
 
 def access_data(Authorization: str = Header(...)):
     if not Authorization:

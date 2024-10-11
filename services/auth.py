@@ -4,7 +4,7 @@ import jwt
 import bcrypt
 from pymongo import MongoClient
 from dotenv import load_dotenv
-
+import certifi
 from settings import Settings
 env=Settings();
 
@@ -16,7 +16,7 @@ MONGO_URI = env.mongo_uri
 
 class Auth:
     def __init__(self):
-        self.client = MongoClient(MONGO_URI)
+        self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
         self.db = self.client['auth_db']
         self.users_collection = self.db['users']
 
@@ -34,7 +34,6 @@ class Auth:
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
             'iat': datetime.datetime.utcnow()
         }
-        print("THE JWT SECRET IS"+JWT_SECRET)
         token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
         return token
 
@@ -65,7 +64,7 @@ class Auth:
         user_id = str(result.inserted_id)
         access_token = self.generate_jwt_token(user_id)
         refresh_token = self.generate_refresh_token(user_id)
-        return {"message": "User registered successfully", "status": True, "user_id": user_id, "access_token": access_token, "refresh_token": refresh_token}
+        return {"message": "User registered successfully", "status": True, "user_id": user_id, "access_token": access_token, "refresh_token": refresh_token, "email": email , "username": username}
 
     def login_user(self, email, password):
         user = self.users_collection.find_one({'email': email})
@@ -79,7 +78,7 @@ class Auth:
         access_token = self.generate_jwt_token(user_id)
         refresh_token = self.generate_refresh_token(user_id)
 
-        return {"message": "Login successful", "status": True, "access_token": access_token, "refresh_token": refresh_token}
+        return {"message": "Login successful", "status": True, "access_token": access_token, "refresh_token": refresh_token, "email": user['email'] , "username": user['username']}
 
     def refresh_access_token(self, refresh_token):
         try:

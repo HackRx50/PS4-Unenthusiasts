@@ -29,8 +29,11 @@ async def upload_document(file: UploadFile = File(...),user_id: str = Depends(ac
 def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Query(None),user_id: str = Depends(access_data)):
     try:
         print(f"User {user_id} is querying the knowledge base.")
-        result = chatbot.answer(request.query, session_id, request.document_id)
-        return {"result": result}
+        # result, msg_id = chatbot.answer(request.query, session_id, request.document_id)
+        response_data = chatbot.answer(request.query, session_id, request.document_id)
+        result = response_data.get("result")
+        msg_id = response_data.get("msg_id")
+        return {"result": result, "logid":msg_id }
     except Exception as e:
         # Handle possible errors and return an error message
         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")

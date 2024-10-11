@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from bson.objectid import ObjectId
-
+import certifi
 from settings import Settings
 env = Settings()
 
@@ -11,7 +11,7 @@ MONGO_URI = env.mongo_uri
 
 class DataAccess:
     def __init__(self):
-        self.client = MongoClient(MONGO_URI)
+        self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where() )
         self.db = self.client['auth_db']
         self.users_collection = self.db['users']
         self.tier_limits = {'basic': 50, 'premium': 200}

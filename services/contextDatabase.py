@@ -2,14 +2,14 @@ from pymongo import MongoClient
 import uuid
 import os
 from settings import Settings
-
+import certifi
 env = Settings()
 
 MONGO_URI = env.mongo_uri
 MONGO_DB_NAME = env.mongo_db_name
 class ContextDatabaseService:
     def __init__(self):
-        self.client = MongoClient(MONGO_URI)
+        self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
         self.db = self.client[MONGO_DB_NAME]
 
     def find_user_by_username(self, username: str):

@@ -1,7 +1,10 @@
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 import os
+from settings import Settings
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+env=Settings()
+OPENAI_API_KEY = env.openai_api_key
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def get_embedding_function():
