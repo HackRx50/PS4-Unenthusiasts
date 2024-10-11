@@ -33,14 +33,17 @@ import { IoIosMic } from "react-icons/io";
 import { VscFileSubmodule } from "react-icons/vsc";
 import { FaCircle } from "react-icons/fa";
 
+import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
+import { AiOutlineFileUnknown } from "react-icons/ai";
+
 const sampleFileNames = [
   {
     id: 1,
-    name: "Bajaj.pdf",
+    name: "Bajaj.pptx",
   },
   {
     id: 2,
-    name: "Hero.pdf",
+    name: "Hero.docx",
   },
   {
     id: 3,
@@ -248,7 +251,9 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
       >
         <div className="w-full h-full flex flex-col gap-2 items-start justify-center relative">
           <div className="w-[80%] flex py-2 items-center justify-center">
-            <div className="text-xs w-20 text-gray-400">Using Files</div>
+            {filteredFiles.length > 0 && (
+              <div className="text-xs w-20 text-gray-400">Using Files</div>
+            )}
             <div className="py-1 w-full flex gap-2 overflow-x-auto">
               {filteredFiles.map((file, index) => (
                 <div
@@ -268,7 +273,6 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
             }}
             ref={btnFilesViewRef}
             onClick={() => {
-              console.log("Files View Opened");
               onFilesViewOpen();
             }}
           >
@@ -377,7 +381,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                     className="flex items-center justify-between w-full gap-4 py-2"
                   >
                     <div
-                      className="flex items-center cursor-pointer py-2 rounded-xl hover:bg-gray-50 w-full px-2 gap-2"
+                      className="flex items-center cursor-pointer py-2 rounded-xl hover:bg-gray-50 w-full px-4 gap-2"
                       onClick={() => {
                         if (selectedFiles.includes(file.id)) {
                           setSelectedFiles((prev) =>
@@ -388,15 +392,22 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                         }
                       }}
                     >
-                      <Checkbox
-                        colorScheme={
-                          selectedFiles.includes(file.id) ? "blue" : "gray"
-                        }
-                        isChecked={selectedFiles.includes(file.id)}
-                      />
-
+                      {file.name.includes(".pdf") && (
+                        <GrDocumentPdf className="text-gray-700" />
+                      )}
+                      {file.name.includes(".docx") && (
+                        <GrDocumentWord className="text-gray-700" />
+                      )}
+                      {file.name.includes(".pptx") && (
+                        <GrDocumentPpt className="text-gray-700" />
+                      )}
+                      {!file.name.includes(".pdf") &&
+                        !file.name.includes(".doc") &&
+                        !file.name.includes(".ppt") && (
+                          <AiOutlineFileUnknown className="text-gray-700" />
+                        )}
                       <div
-                        className="text-gray-700 text-sm"
+                        className="flex w-full items-end"
                         onClick={() => {
                           if (selectedFiles.includes(file.id)) {
                             setSelectedFiles((prev) =>
@@ -407,8 +418,19 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                           }
                         }}
                       >
-                        {file.name}
+                        <div className="text-gray-700 pr-4 text-sm">
+                          {file.name.split(".")[0]}
+                        </div>
+                        <div className="text-gray-400 text-xs">
+                          .{file.name.split(".")[1]}
+                        </div>
                       </div>
+                      <Checkbox
+                        colorScheme={
+                          selectedFiles.includes(file.id) ? "blue" : "gray"
+                        }
+                        isChecked={selectedFiles.includes(file.id)}
+                      />
                     </div>
                   </div>
                 ))}
