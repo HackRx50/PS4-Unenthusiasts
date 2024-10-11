@@ -204,7 +204,7 @@ class KnowledgeBaseService:
         })
         print("HELLO2")
 
-        return gpt_response
+        return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):
         print("filename",filename)
         filePath = None
