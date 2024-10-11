@@ -6,10 +6,11 @@ from services.knowledgeBase import KnowledgeBaseService
 from models.request_models import QueryRequest
 from services.chatbot import Chatbot
 from services.pineCone import VectorPineConeDatabaseService
-
+from services.docuementProcessor import DocumentProcessor
 
 chat_router = APIRouter()
 knowledgebase_service = KnowledgeBaseService(collection_name="knowledgebase")
+document_service=DocumentProcessor()
 chatbot = Chatbot("chatbot")
 db_service = ContextDatabaseService()
 
@@ -27,12 +28,12 @@ async def upload_document(file: UploadFile = File(...),user_id: str = Depends(ac
         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
     
 
-@chat_router.post("/v2/addToKnowledgeBase")
-async def upload_document(file: UploadFile = File(...),user_id: str = Depends(access_data)):
+@chat_router.post("/upload_document")
+async def upload_document(file: UploadFile = File(...)):
     try:
-        print(f"User {user_id} is querying the knowledge base.")
-        result = await (file)
-        return {"message": "File uploaded successfully", "details": result}
+        # print(f"User {user_id} is querying the knowledge base.")
+        result = await document_service.upload_document(file)
+        return "DONE"
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
 

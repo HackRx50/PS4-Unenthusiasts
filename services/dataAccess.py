@@ -14,7 +14,7 @@ class DataAccess:
         self.client = MongoClient(MONGO_URI, tlsCAFile=certifi.where() )
         self.db = self.client['auth_db']
         self.users_collection = self.db['users']
-        self.tier_limits = {'basic': 50, 'premium': 200}
+        self.tier_limits = {'basic': 10000, 'premium': 200}
 
     def get_user_info(self, user_id):
         user = self.users_collection.find_one({'_id': ObjectId(user_id)})

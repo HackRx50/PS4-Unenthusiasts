@@ -14,7 +14,7 @@ class S3Storage:
             region_name="ap-south-1"
         )
 
-    def upload_file(self, file_name, object_name=None, metadata=None):
+    def upload_file(self, filePath, object_name=None, metadata=None):
         """
         Uploads a file to the S3 bucket with optional metadata.
         
@@ -23,8 +23,6 @@ class S3Storage:
         :param metadata: A dictionary of metadata to associate with the object (optional).
         :return: True if file was uploaded, else False
         """
-        if object_name is None:
-            object_name = file_name
 
         try:
             # Extra arguments to pass during upload
@@ -32,12 +30,12 @@ class S3Storage:
             
             # Upload the file with metadata if provided
             self.s3.upload_file(
-                file_name,
+                filePath,
                 self.bucket_name,
                 object_name,
                 ExtraArgs=extra_args
             )
-            print(f"File '{file_name}' uploaded to '{self.bucket_name}/{object_name}' with metadata: {metadata}.")
+            print(f"File '{filePath}' uploaded to '{self.bucket_name}/{object_name}' with metadata: {metadata}.","HELLO1")
             return True
         except FileNotFoundError:
             print("The file was not found.")
