@@ -2,7 +2,7 @@ from services.llm import LLMService
 from services.knowledgeBase import KnowledgeBaseService
 from services.messageQueue import MessageQueueService
 import json
-
+import uuid
 
 class Chatbot:
     def __init__(self,name):
@@ -12,6 +12,7 @@ class Chatbot:
         self.messageQueue = MessageQueueService(name, "localhost")
         
     def answer(self, question,session_id,document_id):
+        msg_id = None
         res=self.llm.generate_response(messages=[
             {"role": "system", "content": """
              Identify where the query os the user is query or action
@@ -41,9 +42,10 @@ class Chatbot:
             response="Action queued successfully"
 
         if res["isAction"]:
+            msg_id = str(uuid.uuid4())
             message=json.dumps({"user query":question,"response":response, "action":res["action"]})
             print(f"Sending message: {message}")
-            self.messageQueue.publish_message(message)
+            self.messageQueue.publish_message(message,msg_id)
 
-        return response
+        return {"result":response,"msg_id":msg_id}
     

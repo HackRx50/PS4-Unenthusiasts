@@ -9,12 +9,12 @@ from services.messageQueue import MessageQueueService
 from services.llm import LLMService
 from tools.tools import tools
 from langchain_core.prompts import PromptTemplate
-from langchain_community.llms import OpenAI
 from settings import Settings
-env=Settings();
+env=Settings()
 MONGO_URI = env.mongo_uri
 MONGO_DB_NAME=env.mongo_db_name
-
+from langchain_community.llms import OpenAI
+OPENAI_API_KEY = env.openai_api_key
 
 template = '''Answer the following questions as best you can. You have access to the following tools:
 
@@ -66,14 +66,14 @@ class ActionExecuter:
     def __init__(self, chatbotName,num_workers):
         self.message_queue = MessageQueueService(chatbotName,"localhost")
         self.num_workers = num_workers
-        self.llm = OpenAI()
-
+        self.llm = OpenAI(openai_api_key=OPENAI_API_KEY)
+        self.db_service = ContextDatabaseService()  
         self.tools = tools 
         self.executor = ThreadPoolExecutor(max_workers=self.num_workers)  
     
 
     def on_message(self, ch, method, properties, body):
-        future = self.executor.submit(self.process_message, body)
+        future = self.executor.submit(self.process_message, body,properties)
         future.add_done_callback(lambda x:
             print(f"Task completed: {x.result()}"))
         

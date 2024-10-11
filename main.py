@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routes.chat import chat_router
 from routes.auth import auth_router
 import multiprocessing
@@ -6,6 +7,18 @@ import uvicorn
 from services.actions import ActionExecuter  
 
 app = FastAPI()
+origins = [
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173",  
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allow these origins
+    allow_credentials=True,  # Allow credentials such as cookies
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 app.include_router(chat_router)
 app.include_router(auth_router)

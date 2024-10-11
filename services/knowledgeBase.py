@@ -78,7 +78,7 @@ class KnowledgeBaseService:
 
     #     return information
     
-    def search_knowledge_base(self, query, document_id):
+    def search_knowledge_base(self, query, document_id=None):
     # Check if the query is present in the cache
         cache_results = self.semantic_cache.search_cache(query)
         if cache_results is not None:
@@ -141,7 +141,7 @@ class KnowledgeBaseService:
         # )
         system_prompt=(
             '''   **Note ** : If the question is not about policies and is a General messsage or greetings , answer them politely (Dont give me any policies and source), and in the end say "You can ask me about policies ,For more accurate information on genral inquiry ,you might try asking the Information Assistant—it's built specifically to sherlock the internet for you!."
-              **Note ** : If information is not available, explicitly state the following message: "Sorry, I couldn't find an answer to your question in the shared policy documents. Could you please provide more details or specific context? If it's a general inquiry, you might try asking the Information Assistant—it's built specifically to sherlock the internet for you!"
+              **Note ** : If query is out of context of info you have, explicitly state the following message: "Sorry, I couldn't find an answer to your question in the shared policy documents. Could you please provide more details or specific context? If it's a general inquiry, you might try asking the Information Assistant—it's built specifically to sherlock the internet for you!"
                 Otherwise Follow the below Instructions-
             
 
