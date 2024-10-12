@@ -52,34 +52,6 @@ const ChatSection = ({
 }) => {
   const { user } = useUser();
   const [message, setMessage] = useState("");
-  const handleSubmit = async () => {
-    if (!message.trim()) return;
-
-    const url = "http://localhost:8000/chat";
-
-    try {
-      const response = await axios.post(
-        url,
-        {
-          query: message,
-          document_id: [], // Send as an empty array or pass a valid list of strings
-        },
-        {
-          params: {
-            session_id: activeChatId,
-          },
-          headers: {
-            Authorization: `Bearer ${user?.access_token}`,
-          },
-        }
-      );
-      console.log("Response:", response.data);
-      setMessage("");
-      getChatData();
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
 
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
@@ -155,6 +127,36 @@ const ChatSection = ({
   } = useDisclosure();
 
   const finalRef = useRef(null);
+
+  const handleSubmit = async () => {
+    if (!message.trim()) return;
+
+    const url = "http://localhost:8000/chat";
+
+    const body = {
+      query: message,
+    };
+
+    if (filteredFiles.length > 0) {
+      body.document_id = filteredFiles;
+    }
+
+    try {
+      const response = await axios.post(url, body, {
+        params: {
+          session_id: activeChatId,
+        },
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+        },
+      });
+      console.log("Response:", response.data);
+      setMessage("");
+      getChatData();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
