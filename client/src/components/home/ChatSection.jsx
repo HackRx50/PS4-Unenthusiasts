@@ -187,11 +187,13 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
     let formData = new FormData();
     formData.append("file", fileUpload);
 
-    const url = "http://localhost:8000/addToKnowledgeBase";
+    const url = "http://localhost:8000/upload_document";
 
     const response = await axios.post(url, formData, {
       headers: {
         Authorization: `Bearer ${user?.access_token}`,
+        "Content-Type": "application/pdf",
+        Accept: "application/json",
       },
     });
   };
