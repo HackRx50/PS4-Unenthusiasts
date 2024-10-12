@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useUser } from "../context/UserContext";
 
-const AuthPage = () => {
+const AuthPage = ({ setLoading }) => {
   const { login } = useUser();
   const [showPassWord, setShowPassWord] = useState(false);
   const handleClickShowPassWord = () => setShowPassWord(!showPassWord);
@@ -38,6 +38,7 @@ const AuthPage = () => {
   const [phone, setPhone] = useState("");
 
   const handleSubmit = async () => {
+    setLoading(true);
     const baseURL = "http://127.0.0.1:8000";
     const url = `${baseURL}/${activeTab === 0 ? "login" : "register"}`;
     const data =
@@ -52,6 +53,8 @@ const AuthPage = () => {
       navigate("/home");
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

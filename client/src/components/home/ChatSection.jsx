@@ -10,6 +10,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  Highlight,
   Input,
   Menu,
   MenuButton,
@@ -45,6 +46,7 @@ import FileUploadStage from "./FileUploadStage";
 import ReactMarkdown from "react-markdown";
 
 const ChatSection = ({
+  setLoading,
   getChatData,
   activeChatId,
   currentChatData,
@@ -69,13 +71,21 @@ const ChatSection = ({
   const [allFiles, setAllFiles] = useState([]); //all files available
 
   const getFiles = async () => {
+    setLoading(true);
     const url = "http://localhost:8000/get_files";
 
-    const response = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${user?.access_token}`,
-      },
-    });
+    const response = await axios
+      .get(url, {
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+        },
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     setAllFiles(response.data.documents.document_names);
   };
@@ -112,13 +122,17 @@ const ChatSection = ({
 
     const url = "http://localhost:8000/upload_document";
 
-    const response = await axios.post(url, formData, {
-      headers: {
-        Authorization: `Bearer ${user?.access_token}`,
-        "Content-Type": "application/pdf",
-        Accept: "application/json",
-      },
-    });
+    const response = await axios
+      .post(url, formData, {
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+          "Content-Type": "application/pdf",
+          Accept: "application/json",
+        },
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const {
@@ -309,12 +323,24 @@ const ChatSection = ({
                                 message.content.lastIndexOf("(")
                               )}
                             </ReactMarkdown>
-                            <div className="text-sky-400 mt-7">
+                            <Highlight
+                              query={message.content.slice(
+                                message.content.lastIndexOf("(") + 1,
+                                message.content.lastIndexOf(")")
+                              )}
+                              styles={{
+                                px: "1",
+                                py: "1",
+                                bg: "orange.100",
+                                borderRadius: "10px",
+                                margin: "10px 0 0 0",
+                              }}
+                            >
                               {message.content.slice(
                                 message.content.lastIndexOf("(") + 1,
                                 message.content.lastIndexOf(")")
                               )}
-                            </div>
+                            </Highlight>
                           </div>
                         )}
                       </div>

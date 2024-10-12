@@ -3,7 +3,7 @@ import { ChatSection, Sidebar } from "../components/home";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
 
-const HomePage = () => {
+const HomePage = ({ setLoading }) => {
   const { user } = useUser();
   const [chatData, setChatData] = useState([]);
   const [activeChatId, setActiveChatId] = useState(0);
@@ -11,6 +11,7 @@ const HomePage = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const getChatData = async () => {
+    const setLoading = true;
     const url = "http://127.0.0.1:8000/get_chats";
     await axios
       .get(url, {
@@ -53,6 +54,9 @@ const HomePage = () => {
       })
       .catch((error) => {
         console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -81,6 +85,7 @@ const HomePage = () => {
         setDarkMode={setDarkMode}
       />
       <ChatSection
+        setLoading={setLoading}
         getChatData={getChatData}
         activeChatId={activeChatId}
         currentChatData={currentChatData}
