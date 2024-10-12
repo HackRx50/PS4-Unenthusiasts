@@ -30,3 +30,5 @@ class VectorContextDatabaseService:
             collection_name=self.collection_name,
             points=points
         )
+
+   

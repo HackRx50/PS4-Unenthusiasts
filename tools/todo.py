@@ -2,6 +2,8 @@ todo_list = []
 current_id = 1  
 
 
+
+
 def add_todo_item(item: str) -> str:
     global current_id
     todo_id = current_id

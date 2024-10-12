@@ -19,3 +19,5 @@ llama-parse
 llama-index-readers-file
 pika
 pyjwt
+boto3
+botocore

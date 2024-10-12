@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str = Body(...)
-    document_ids: Optional[List[str]] = Body(None)
+    document_id: Optional[List[str]] = Body(None)
 
 
 class RegisterRequest(BaseModel):
@@ -21,3 +21,5 @@ class RegisterRequest(BaseModel):
 class ChangeTierRequest(BaseModel):
     email: str
     tier: str
+    
+class 

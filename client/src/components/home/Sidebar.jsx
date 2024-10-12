@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { TbMessageChatbot } from "react-icons/tb";
+import { IoIosAddCircleOutline } from "react-icons/io";
 
 const Cell = ({
   chatId,
@@ -26,40 +27,46 @@ const Cell = ({
 
   return (
     <div
-      className={`flex items-center gap-2 transition-all duration-200 justify-between w-full px-3 py-1 cursor-pointer ${chatId === activeChatId
+      className={`flex items-center gap-2 transition-all duration-200 justify-between w-full px-3 py-1 cursor-pointer ${
+        chatId === activeChatId
           ? `${darkMode ? "bg-gray-600" : "bg-gray-100"}`
           : ""
-        } ${darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"}`}
+      } ${darkMode ? "hover:bg-gray-600" : "hover:bg-gray-100"}`}
       onClick={() => {
         setActiveChatId(chatId);
       }}
     >
       <div className="w-6">
         <div
-          className={`w-4 h-4 items-center justify-center flex transition-all duration-200 rounded-full ${chatId === activeChatId
-              ? `bg-gradient-to-tr ${darkMode
-                ? "from-white to-[#937ee3]"
-                : "from-[#4A25E1] to-[#937ee3]"
-              }`
+          className={`w-4 h-4 items-center justify-center flex transition-all duration-200 rounded-full ${
+            chatId === activeChatId
+              ? `bg-gradient-to-tr ${
+                  darkMode
+                    ? "from-white to-[#937ee3]"
+                    : "from-[#4A25E1] to-[#937ee3]"
+                }`
               : "bg-gray-400 bg-opacity-50"
-            }`}
+          }`}
         >
           <div
-            className={`h-[0.64rem] w-[0.64rem] transition-all duration-200 rounded-full ${darkMode ? "bg-gray-800" : "bg-white"
-              }`}
+            className={`h-[0.64rem] w-[0.64rem] transition-all duration-200 rounded-full ${
+              darkMode ? "bg-gray-800" : "bg-white"
+            }`}
           />
         </div>
       </div>
       <div className="flex items-center w-full gap-3">
         <div className="flex flex-col">
           <div
-            className={`font-semibold transition-all duration-200 text-sm ${chatId === activeChatId
-                ? `bg-gradient-to-t ${darkMode
-                  ? "from-white to-[#937ee3]"
-                  : "from-[#4A25E1] to-[#937ee3]"
-                } bg-clip-text text-transparent`
+            className={`font-semibold transition-all duration-200 text-sm ${
+              chatId === activeChatId
+                ? `bg-gradient-to-t ${
+                    darkMode
+                      ? "from-white to-[#937ee3]"
+                      : "from-[#4A25E1] to-[#937ee3]"
+                  } bg-clip-text text-transparent`
                 : `font-thin ${darkMode ? "text-white" : "text-[#1B2559]"}`
-              }`}
+            }`}
           >
             {title}
           </div>
@@ -69,7 +76,6 @@ const Cell = ({
     </div>
   );
 };
-
 
 const Sidebar = ({
   activeChatId,
@@ -97,31 +103,40 @@ const Sidebar = ({
 
   return (
     <div
-      className={`w-80 h-screen z-[10000] transition-all duration-200 flex flex-col items-center justify-center gap-3 shadow-lg ${darkMode ? "bg-gray-800 shadow-gray-950" : "bg-white shadow-gray-200"
-        }`}
+      className={`w-80 h-screen z-[200] transition-all duration-200 flex flex-col items-center justify-center gap-3 shadow-lg ${
+        darkMode ? "bg-gray-800 shadow-gray-950" : "bg-white shadow-gray-200"
+      }`}
     >
       <div
-        className={`w-full transition-all duration-200 text-3xl py-10 flex items-center justify-center ${darkMode ? "text-white" : "text-[#1B2559]"
-          }`}
+        className={`w-full transition-all duration-200 text-3xl py-10 flex items-center justify-center ${
+          darkMode ? "text-white" : "text-[#1B2559]"
+        }`}
       >
         <div className="font-bold">UNENTHU</div>
         <div className="">BOT</div>
       </div>
       <div
-        className={`w-full transition-all duration-200 h-[1px] ${darkMode ? "bg-white" : "bg-[#1B2559]"
-          }`}
+        className={`w-full transition-all duration-200 h-[1px] ${
+          darkMode ? "bg-white" : "bg-[#1B2559]"
+        }`}
       />
-      <div className="flex transition-all duration-200 flex-col py-4 gap-2 w-full h-full overflow-y-auto">
-        <button class="bg-white text-black border border-gray-300 rounded-lg px-4 py-2 shadow hover:bg-gray-100 transition duration-200 ease-in-out mx-3" onClick={()=>setActiveChatId(0)}>
-          + New Chat
-        </button>
-
+      <div className="flex items-center transition-all duration-200 flex-col py-4 gap-2 w-full h-full overflow-y-auto">
+        <div className="w-full px-3">
+          <button
+            className="bg-[#1B2559] hover:bg-opacity-80 text-white flex items-center justify-center gap-3 rounded-2xl w-full py-3"
+            onClick={() => setActiveChatId(0)}
+          >
+            <IoIosAddCircleOutline className="text-xl" />
+            <div className="text-sm font-semibold">New Chat</div>
+          </button>
+        </div>
         {todayChats?.length > 0 && (
           <div
-            className={`px-3 text-xs ${darkMode ? "text-white" : "text-[#1B2559]"
-              }`}
+            className={`px-3 w-full transition-all duration-200 text-xs ${
+              darkMode ? "text-white" : "text-[#1B2559]"
+            }`}
           >
-            TODAY
+            Today
           </div>
         )}
         {todayChats?.map((chat) => (
@@ -137,16 +152,18 @@ const Sidebar = ({
         ))}
         {todayChats?.length > 0 && otherChats.length > 0 && (
           <div
-            className={`w-full transition-all duration-200 h-[1px] ${darkMode ? "bg-white" : "bg-[#1B2559]"
-              }`}
+            className={`w-full transition-all duration-200 h-[1px] ${
+              darkMode ? "bg-white" : "bg-[#1B2559]"
+            }`}
           />
         )}
         {otherChats?.length > 0 && (
           <div
-            className={`px-3 transition-all duration-200 text-xs ${darkMode ? "text-white" : "text-[#1B2559]"
-              }`}
+            className={`px-3 w-full transition-all duration-200 text-xs ${
+              darkMode ? "text-white" : "text-[#1B2559]"
+            }`}
           >
-            Older chats
+            Earlier
           </div>
         )}
         {otherChats?.map((chat) => (
