@@ -259,7 +259,7 @@ class KnowledgeBaseService:
             if all_points:
                 self.vector_db.upsert(all_points)
                 self.semantic_cache = SemanticCacheService("cache", float(0.35))
-                self.database.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
+                self.database.add_document_name(actual_filename,document_id=document_id,kb_name=self.collection_name)
 
                 return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
             else:
