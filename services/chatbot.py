@@ -55,6 +55,8 @@ class Chatbot:
         - If the action requires an order (e.g., getting order status or canceling an order), retrieve the list of the user's orders first, then determine the specific order based on context or user input.
         - If the action involves placing an order, consider this while framing the action: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details.
 
+        if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated proper
+
         Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context.
         """
 

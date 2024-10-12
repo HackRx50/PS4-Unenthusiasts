@@ -5,7 +5,7 @@ def order( productId: str, productName: str, productPrice: float, action: str):
     if not productId or not productName or not productPrice or not action:
         return "Insufficient data. All parameters (productId, productName, productPrice, action) are required."
 
-    mobile="12345"
+    mobile="123456"
     url = "https://hackrx-ps4.vercel.app/order"
     
     _id =str(uuid.uuid4())
@@ -43,7 +43,7 @@ def order( productId: str, productName: str, productPrice: float, action: str):
 
 
 def get_orders():
-    mobile="12345"
+    mobile="123456"
     url = "https://hackrx-ps4.vercel.app/orders"
     
     headers = {
@@ -68,7 +68,7 @@ def get_orders():
 
 
 def get_order_status(order_id: str):
-    mobile="12345"
+    mobile="123456"
     url = f"https://hackrx-ps4.vercel.app/order-status?orderId{order_id}&mobile={mobile}"
     
     headers = {
