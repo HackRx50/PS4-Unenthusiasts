@@ -80,9 +80,11 @@ def get_files():
 
 
 @chat_router.get("/get_chats")
-def get_chats(session_id: str):
+def get_chats(user_id: str):
     try:
-        sessions = session_service.find_session_by_id(session_id)
+        sessions = list(session_service.find_session_by_user_id(
+            user_id))
+        print("Sessions", sessions)
         return {"sessions": sessions}
     except Exception as e:
         print("Error", e)

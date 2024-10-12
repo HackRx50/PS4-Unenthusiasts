@@ -27,6 +27,9 @@ class ContextDatabaseService:
     def find_session_by_id(self, session_id: str):
         return self.db.sessions.find_one({"_id": session_id})
 
+    def find_session_by_user_id(self, user_id: str):
+        return self.db.sessions.find({"userid": user_id})
+
     def update_session_context(self, session_id: str, new_context: dict):
         return self.db.sessions.update_one({"_id": session_id}, {"$push": {"context": new_context}})
     

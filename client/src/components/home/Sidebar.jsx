@@ -70,7 +70,6 @@ const Cell = ({
           >
             {title}
           </div>
-          <div className="text-[#B8C1DA] text-xs">{lastUpdated}</div>
         </div>
       </div>
     </div>

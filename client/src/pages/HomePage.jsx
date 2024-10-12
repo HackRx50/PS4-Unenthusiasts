@@ -12,35 +12,45 @@ const HomePage = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const getChatData = async () => {
-    const url = "http://localhost:8000/get_chats";
+    const url = "http://127.0.0.1:8000/get_chats";
     await axios
       .get(url, {
         params: {
-          session_id: "66cc847befc2d1c042dbcc4f",
+          user_id: user.userid,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
         },
       })
       .then((response) => {
-        let temp = response.data.sessions.context;
-        let new_temp = [];
+        let temp = response.data.sessions;
+        let data = [];
         for (let i = 0; i < temp.length; i++) {
-          let query = temp[i].query;
-          let response = temp[i].gpt_response;
-          new_temp.push({
-            message_id: 2 * i,
-            sender: "user",
-            content: query,
-          });
-          new_temp.push({
-            message_id: 2 * i + 1,
-            sender: "assistant",
-            content: response,
-          });
+          let chat = {
+            chat_id: temp[i]._id,
+            chat_title: "Chat " + (i + 1),
+          };
+          let messages = [];
+          for (let j = 0; j < temp[i].context.length; j++) {
+            let user = {
+              message_id: 2 * j,
+              sender: "user",
+              content: temp[i].context[j].query,
+            };
+            messages.push(user);
+            let assistant = {
+              message_id: 2 * j + 1,
+              sender: "assistant",
+              content: temp[i].context[j].gpt_response,
+            };
+            messages.push(assistant);
+          }
+          chat["messages"] = messages;
+          data.push(chat);
         }
 
-        setChatData({
-          chat_id: "1",
-          messages: new_temp,
-        });
+        setChatData(data);
       })
       .catch((error) => {
         console.error(error);
@@ -53,14 +63,14 @@ const HomePage = () => {
 
   useEffect(() => {
     if (activeChatId) {
-      const chatData = chatData.find(
-        (chat) => chat.message_id === activeChatId
+      const activeChatData = chatData.find(
+        (chat) => chat.chat_id === activeChatId
       );
-      setCurrentChatData(chatData);
+      setCurrentChatData(activeChatData);
     } else {
       setCurrentChatData(null);
     }
-  }, [activeChatId]);
+  }, [activeChatId, chatData]);
 
   return (
     <div className="h-full w-full flex items-center justify-center">
@@ -72,6 +82,8 @@ const HomePage = () => {
         setDarkMode={setDarkMode}
       />
       <ChatSection
+        getChatData={getChatData}
+        activeChatId={activeChatId}
         currentChatData={currentChatData}
         darkMode={darkMode}
         setDarkMode={setDarkMode}

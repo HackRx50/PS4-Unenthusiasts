@@ -43,7 +43,13 @@ import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
 
-const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
+const ChatSection = ({
+  getChatData,
+  activeChatId,
+  currentChatData,
+  darkMode,
+  setDarkMode,
+}) => {
   const { user } = useUser();
   const [message, setMessage] = useState("");
   const handleSubmit = async () => {
@@ -56,8 +62,12 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
         url,
         {
           query: message,
+          document_id: [], // Send as an empty array or pass a valid list of strings
         },
         {
+          params: {
+            session_id: activeChatId,
+          },
           headers: {
             Authorization: `Bearer ${user?.access_token}`,
           },
@@ -65,6 +75,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
       );
       console.log("Response:", response.data);
       setMessage("");
+      getChatData();
     } catch (error) {
       console.error("Error:", error);
     }
@@ -216,11 +227,11 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
         </div>
       </div>
       <div
-        className={`h-full transition-all duration-200 w-full py-4 px-20 ${
+        className={`h-[100vh] overflow-y-auto transition-all duration-200 w-full py-4 px-20 ${
           darkMode ? "bg-gray-900" : "bg-gray-100"
         }`}
       >
-        <div className="w-full h-full flex flex-col gap-2 items-start justify-center relative">
+        <div className="w-full h-full overflow-y-auto flex flex-col gap-2 items-start justify-center relative">
           <div className="w-[40rem] flex py-2 items-center justify-center">
             {filteredFiles.length > 0 && (
               <div className="text-xs w-20 text-gray-400">Using Files</div>
@@ -250,49 +261,54 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
             <div className="text-sm">View Files</div>
             <VscFileSubmodule />
           </button>
-          {currentChatData ? (
-            <div className="w-full py-2 h-full flex flex-col items-center justify-end overflow-y-auto">
-              {currentChatData.messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-4 w-full ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+          <div className="flex w-full h-screen overflow-y-auto">
+            {currentChatData ? (
+              <div className="w-full py-2 h-fit gap-2 flex flex-col items-center justify-end">
+                {currentChatData.messages.map((message, index) => (
                   <div
-                    className={`flex items-center gap-2 ${
+                    key={index}
+                    className={`flex items-center gap-4 w-full ${
                       message.sender === "user"
-                        ? "flex-row-reverse"
-                        : "flex-row"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
                     <div
-                      className={`${
-                        darkMode ? "text-white" : "text-[#1B2559]"
-                      } transition-all duration-200`}
-                    >
-                      {message.sender === "user" ? <FaUser /> : <BsStars />}
-                    </div>
-                    <div
-                      className={`text-sm transition-all duration-200 rounded-2xl px-4 py-2 ${
+                      className={`flex items-center gap-2 ${
                         message.sender === "user"
-                          ? "bg-[#1B2559] text-white"
-                          : `text-[#1B2559] ${
-                              darkMode ? "bg-gray-100" : "bg-white"
-                            }`
+                          ? "flex-row-reverse"
+                          : "flex-row"
                       }`}
                     >
-                      {message.content}
+                      <div
+                        className={`${
+                          darkMode ? "text-white" : "text-[#1B2559]"
+                        } transition-all duration-200`}
+                      >
+                        {message.sender === "user" ? <FaUser /> : <BsStars />}
+                      </div>
+                      <div
+                        className={`text-sm transition-all duration-200 rounded-2xl px-4 py-2 ${
+                          message.sender === "user"
+                            ? "bg-[#1B2559] text-white"
+                            : `text-[#1B2559] ${
+                                darkMode ? "bg-gray-100" : "bg-white"
+                              }`
+                        }`}
+                      >
+                        {message.content}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <img src={NullImage} alt="null" className="h-[10rem]" />
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <img src={NullImage} alt="null" className="h-[10rem]" />
+              </div>
+            )}
+          </div>
+
           <div className="w-full h-14 gap-4 flex justify-center items-center">
             <div className="bg-white h-full w-full gap-2 flex justify-center items-center px-4 rounded-2xl">
               <input
