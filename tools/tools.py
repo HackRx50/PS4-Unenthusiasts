@@ -12,7 +12,7 @@ class KnowledgeBaseArgs(BaseModel):
 knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
     func=kb.search_knowledge_base,
-    description='Search the knowledge base for relevant information based on a detailed query from the user. Use this tool when placing order. i have product details in my knowledge base use them.',
+    description='Search the knowledge base for relevant information based on a detailed query from the user. Use this tool when placing order. i have product details in my knowledge base use them. Search only for what the user has asked for. Use the correct schema which is only query string thats it.',
     args_schema=KnowledgeBaseArgs
 )
 
@@ -50,13 +50,13 @@ class orderArgs(BaseModel):
 #   mobile: str
   productId: str
   productName: str
-  productPrice:int
+  productPrice:float
   action: str
 
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='Order or cancel a product from the store. Use product details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements in schema, use NONE. do not assume any fields.',
+    description='Order or cancel a product from the store. Search details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use product price as float only. ONLY CALL this function if you have sufficient details. DO NOT CALL GET ORDER STATUS AFTER PLACING ORDER',
     args_schema=orderArgs
 )
 
@@ -69,7 +69,7 @@ get_order_tool = StructuredTool.from_function(
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
-    description='Get the status of the order',
+    description='Get the status of the order. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string.',
 )
 
 generate_leads_tool = StructuredTool.from_function(

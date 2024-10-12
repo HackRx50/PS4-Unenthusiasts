@@ -1,14 +1,14 @@
 import requests
 import uuid
 
-def order( productId: str, productName: str, productPrice: int, action: str):
+def order( productId: str, productName: str, productPrice: float, action: str):
     if not productId or not productName or not productPrice or not action:
         return "Insufficient data. All parameters (productId, productName, productPrice, action) are required."
 
     mobile="12345"
     url = "https://hackrx-ps4.vercel.app/order"
     
-    _id = str(uuid.uuid4())
+    _id ="orderid"+str(uuid.uuid4())
 
     headers = {
         "team": "unenthusiasts",      

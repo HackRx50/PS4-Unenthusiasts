@@ -22,6 +22,7 @@ class Chatbot:
         if not session_id or not self.database.find_session_by_id(session_id):
             session_id = self.database.create_session(user_id)
         system_prompt="""
+        **NOTE**: ONLY GIVE RESPONSE IN JSON. NOTHING ELSE.
              Identify where the question of the user is query or action
                 Strictly follow the below output format
                 Output format:
@@ -32,7 +33,7 @@ class Chatbot:
                     "action": String
                 }
                 query should be the question that the user asked , **NOTE** you need to use context + current question to formulate a query for vector data base which will be used to query the knowledge base, it should be detailed and represnt clearly what user is asking with the help of current question + previous context messages
-                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order you will need id of the order for this, get all my orders
+                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status- you will need id of the order for this so get all orders first then check for the order for which the user is asking status or use context as well, get all my orders
                 if the user wants to place an order, then frame "action" where it first searches for the product details and then places order using these details
              """
 
