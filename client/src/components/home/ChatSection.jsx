@@ -300,7 +300,12 @@ const ChatSection = ({
                   <div className="">Billing</div>
                 </div>
               </MenuItem>
-              <MenuItem>
+              <MenuItem
+                onClick={() => {
+                  localStorage.removeItem("user");
+                  window.location.href = "/";
+                }}
+              >
                 <div className="flex items-center justify-center gap-2">
                   <BiLogOut />
                   <div className="">Logout</div>
