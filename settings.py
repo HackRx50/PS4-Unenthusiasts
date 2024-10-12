@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_refresh_secret:str
     aws_access_key:str
     aws_secret_key:str
+    cohere_api_key:str
 
     class Config:
         env_file = ".env" 

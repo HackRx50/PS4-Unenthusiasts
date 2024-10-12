@@ -14,10 +14,14 @@ import uuid
 import os
 from settings import Settings
 import time 
+import cohere
 
 env=Settings()
 OPENAI_API_KEY = env.openai_api_key
 LLAMA_CLOUD_API_KEY = env.llama_cloud_api_key
+COHERE_API_KEY=env.cohere_api_key
+
+co = cohere.Client(COHERE_API_KEY)
 
 def get_embedding_function():
     embeddings = OpenAIEmbeddings(
@@ -85,6 +89,98 @@ class KnowledgeBaseService:
     #     self.semantic_cache.add_to_cache(query, information)
 
     #     return information
+    
+    def search_knowledge_base_reranker(self,query,document_id=None):
+        startcache = time.time()
+    # cache_results = self.semantic_cache.search_cache(query)
+    # if cache_results is not None:
+    #     return cache_results
+        endcache = time.time()
+        durationcache = endcache - startcache
+        print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
+
+        query_embedding = self._query_embedding(query)
+        start_time = time.time()
+
+        # Perform a filtered search by document_id before limiting the results
+        if document_id:
+            search_result = self.vector_db.searchWithFilter(query_embedding, document_id, limit=25)  # Fetch 25 chunks
+        else:
+            search_result = self.vector_db.search(query_embedding, limit=25)
+
+        end_time = time.time()
+        duration = end_time - start_time
+        print(f"Time taken to fetch from vector database: {duration:.4f} seconds")
+
+        util_start = time.time()
+
+        # If no results are found, return a message
+        if not search_result or "matches" not in search_result or not search_result["matches"]:
+            return "Sorry, no relevant results found for the given document."
+
+        # Process the search results
+        results = []
+        texts_for_rerank = []
+        for hit in search_result["matches"]:
+            metadata = hit.get("metadata", {})  # Safely get metadata, or use an empty dictionary if None
+            text = metadata.get("text", "No text available")
+            filename = metadata.get("filename", "Unknown file")
+            page_number = metadata.get("page_number", "Unknown page")
+            score = hit.get("score", 0)
+
+            # Add to list for re-ranking
+            texts_for_rerank.append(text)
+
+            # Add the result to the list
+            results.append({
+                "text": text,
+                "filename": filename,
+                "page_number": page_number,
+                "score": score
+            })
+
+        # If no results after processing, return an appropriate message
+        print(results)
+        if not results:
+            return "Sorry, no relevant results found for the given document."
+
+        # **Step: Use Cohere Re-ranking API**
+        try:
+            reranked_docs = co.rerank(
+                query=query,
+                documents=texts_for_rerank,
+                top_n=len(texts_for_rerank),  # Re-rank all retrieved documents
+                model="rerank-english-v2.0"
+            )
+            # Sort results based on the re-ranking scores
+            reranked_results = sorted(
+                zip(results, reranked_docs),
+                key=lambda x: x[1].relevance_score,
+                reverse=True
+            )
+            
+            # Extract the top 10 sorted results based on the re-ranking
+            top_10_results = [doc[0] for doc in reranked_results[:10]]
+            print(top_10_results)
+        except Exception as e:
+            print(f"Error during re-ranking: {e}")
+            top_10_results = results[:10]  # Fallback to the top 10 results from the initial search if re-ranking fails
+
+        # Concatenate the results into a formatted string using the top 10 re-ranked results
+        informationT = time.time()
+        information = "\n".join(
+            [f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in top_10_results]
+        )
+
+        util_end = time.time()
+        duration_util = util_end - util_start
+        print(f"Time taken to fetch from utils: {duration_util:.4f} seconds")
+    
+    # Add the query to the cache for future use
+    # self.semantic_cache.add_to_cache(query, information)
+
+        return information
+        
     
     def search_knowledge_base(self, query, document_id=None):
 
@@ -161,8 +257,6 @@ class KnowledgeBaseService:
 
     def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
         print("HELLO")
-        if not session_id or not self.database.find_session_by_id(session_id):
-            session_id = self.database.create_session()
         # system_prompt = (
         #     "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         # )
@@ -181,7 +275,10 @@ class KnowledgeBaseService:
 '''
         )
         startT=time.time();
-        information = self.search_knowledge_base(query,document_id=document_id)
+        print("QUERY"+query)
+        # information = self.search_knowledge_base(query,document_id=document_id)
+        information = self.search_knowledge_base_reranker(query,document_id=document_id)
+        
         endT=time.time();
         dur=endT-startT
         print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
@@ -203,6 +300,7 @@ class KnowledgeBaseService:
         print("HELLO2")
 
         return {"gpt_response":gpt_response,"session_id":session_id}
+    
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):
         print("filename",filename)
         filePath = None
@@ -276,7 +374,6 @@ class KnowledgeBaseService:
 
 
 
-
         
             
 
@@ -340,7 +437,7 @@ class KnowledgeBaseService:
         if all_points:
             self.vector_db.upsert(all_points)
             self.semantic_cache = SemanticCacheService("cache", float(0.35))
-            self.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
+            self.database.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
         else:
             return {"status": "error", "message": "No data extracted from the document."}

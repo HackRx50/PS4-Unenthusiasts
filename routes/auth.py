@@ -36,6 +36,9 @@ async def login(request: LoginRequest):
         raise HTTPException(status_code=400, detail="Email and password are required")
 
     result = auth.login_user(email, password)
+    token=result["access_token"]
+    userid=access_data(f"Bearer {token}")
+    result["userid"]=userid
 
     if result['status']:
         return result  # FastAPI automatically returns JSON with a 200 status code

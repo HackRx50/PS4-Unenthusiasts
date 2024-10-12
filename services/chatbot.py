@@ -13,14 +13,14 @@ class Chatbot:
         self.messageQueue = MessageQueueService(name, "localhost")
         self.database = ContextDatabaseService()
         
-    def answer(self, question,session_id,document_id):
+    def answer(self, question,session_id,document_id,user_id):
         msg_id = None
         context_messages=[]
         if session_id is not None:
             session_data = self.database.find_session_by_id(session_id)
             context_messages = session_data.get("context", [])
-        
-            
+        if not session_id or not self.database.find_session_by_id(session_id):
+            session_id = self.database.create_session(user_id)
         system_prompt="""
              Identify where the question of the user is query or action
                 Strictly follow the below output format
@@ -32,7 +32,7 @@ class Chatbot:
                     "action": String
                 }
                 query should be the question that the user asked , **NOTE** you need to use context + current question to formulate a query for vector data base which will be used to query the knowledge base, it should be detailed and represnt clearly what user is asking with the help of current question + previous context messages
-                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order, get all my orders, generate leads,elibility check,health check 
+                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order you will need id of the order for this, get all my orders
                 if the user wants to place an order, then frame "action" where it first searches for the product details and then places order using these details
              """
 
@@ -53,6 +53,7 @@ class Chatbot:
 
         response = None
         if res["isQuery"]:
+            print("ACTUAL QUERY:"+res["query"])
             response = self.kb.query_knowledge_base(res["query"],session_id,document_id,actual_query=question,context_messages=context)
         else:
             response={"gpt_response":"Action queued successfully"}

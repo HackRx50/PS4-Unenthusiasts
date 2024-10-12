@@ -42,7 +42,7 @@ def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Quer
     try:
         print(f"User {user_id} is querying the knowledge base.")
         # result, msg_id = chatbot.answer(request.query, session_id, request.document_id)
-        response_data = chatbot.answer(request.query, session_id, request.document_id)
+        response_data = chatbot.answer(request.query, session_id, request.document_id, user_id)
         # result = response_data.get("result")
         # msg_id = response_data.get("msg_id")
         return response_data
@@ -53,7 +53,7 @@ def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Quer
 @chat_router.get("/log/{message_id}")
 async def get_log_status(message_id: str):
     try:
-        log = db_service.get_log_by_id(message_id)  # Directly call the database service
+        log = db_service.get_log_by_id(message_id)  
         if log:
             return {"message_id": message_id, "output": log["output"]}
         else:
@@ -61,6 +61,17 @@ async def get_log_status(message_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-
+@chat_router.post("/reranker")
+def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Query(None),user_id: str = Depends(access_data)):
+    try:
+        print(f"User {user_id} is querying the knowledge base.")
+        # result, msg_id = chatbot.answer(request.query, session_id, request.document_id)
+        response_data = chatbot.answer(request.query, session_id, request.document_id, user_id)
+        # result = response_data.get("result")
+        # msg_id = response_data.get("msg_id")
+        return response_data
+    except Exception as e:
+        # Handle possible errors and return an error message
+        raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
 
 
