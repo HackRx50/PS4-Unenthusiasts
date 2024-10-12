@@ -160,7 +160,6 @@ class KnowledgeBaseService:
         
 
     def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
-        print("HELLO")
         # system_prompt = (
         #     "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         # )
@@ -178,11 +177,11 @@ class KnowledgeBaseService:
               - Express uncertainty if you're not sure about an answer
 '''
         )
-        startT=time.time();
+        # startT=time.time()
         information = self.search_knowledge_base(query,document_id=document_id)
-        endT=time.time();
-        dur=endT-startT
-        print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
+        # endT=time.time()
+        # dur=endT-startT
+        # print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
 
         user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
         print("HELLO1")
@@ -191,14 +190,11 @@ class KnowledgeBaseService:
 
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
-       
-
 
         self.database.update_session_context(session_id, {
             "query": actual_query,
             "gpt_response": gpt_response,
         })
-        print("HELLO2")
 
         return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):
