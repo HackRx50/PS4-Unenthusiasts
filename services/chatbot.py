@@ -21,7 +21,7 @@ class Chatbot:
             context_messages = session_data.get("context", [])
             
         system_prompt="""
-             Identify where the query os the user is query or action
+             Identify where the question of the user is query or action
                 Strictly follow the below output format
                 Output format:
                 {
@@ -30,12 +30,9 @@ class Chatbot:
                     "query": String,
                     "action": String
                 }
-             
-                isQuery should be true if the user query contains a question , 
-                isAction should be true if the user query contains an action that they want to be performed 
-                query should be the question that the user asked , **NOTE** you need to use context + current question to formulate a query for vector data base which will be used to query the knowledge base, it should be detailed and represnt clearly what user is asking with the help og current question + previous context messages
-                action should be the action that the user wants to be performed
-             
+                query should be the question that the user asked , **NOTE** you need to use context + current question to formulate a query for vector data base which will be used to query the knowledge base, it should be detailed and represnt clearly what user is asking with the help of current question + previous context messages
+                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order, get all my orders
+                if the user wants to place an order, then frame "action" where it first searches for the product details and then places order using these details
              """
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -51,6 +48,7 @@ class Chatbot:
         res=self.llm.generate_response(messages=messages)
         
         res=json.loads(res)
+        print("actionisthis : ",res["action"])
 
         response = None
         if res["isQuery"]:

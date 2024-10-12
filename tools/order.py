@@ -51,6 +51,7 @@ def get_orders():
 
         if response.status_code == 200:
             data = response.json()
+            print("the daata",data)
             return data
         else:
             print(f"Failed with status code: {response.status}")

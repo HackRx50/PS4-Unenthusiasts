@@ -8,11 +8,11 @@ kb=KnowledgeBaseService("knowledgebase")
 
 class KnowledgeBaseArgs(BaseModel):
     query: str
-    document_id: str
+    # document_id: str
 knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
     func=kb.search_knowledge_base,
-    description='Search the knowledge base for relevant information based on a detailed query from the user.',
+    description='Search the knowledge base for relevant information based on a detailed query from the user. Use this tool when placing order. i have product details in my knowledge base use them.',
     args_schema=KnowledgeBaseArgs
 )
 
@@ -47,8 +47,7 @@ delete_todo_tool = StructuredTool.from_function(
 
 
 class orderArgs(BaseModel):
-  id: str
-  mobile: str
+#   mobile: str
   productId: str
   productName: str
   productPrice:float
@@ -57,7 +56,7 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='Order a product from the store.',
+    description='Order or cancel a product from the store. Use product details from knowledge base before doing this to get the proper details and then use them',
     args_schema=orderArgs
 )
 
