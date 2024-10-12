@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { ChatSection, Sidebar } from '../components/home'
-import sample_data from "../assets/sample_data.json"
-import { useUser } from '../context/UserContext'
+import { ChatSection, Sidebar } from "../components/home";
+import { useUser } from "../context/UserContext";
 import axios from "axios";
 
 const HomePage = () => {
   const { user } = useUser();
-  const [chatData, setChatData] = useState(sample_data["chats"]);
+  const [chatData, setChatData] = useState([]);
   const [activeChatId, setActiveChatId] = useState(0);
   const [currentChatData, setCurrentChatData] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -47,7 +46,7 @@ const HomePage = () => {
             messages.push(assistant);
           }
           chat["messages"] = messages;
-          data.push(chat);
+          if (chat["messages"].length > 0) data.push(chat);
         }
 
         setChatData(data);
