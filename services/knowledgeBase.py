@@ -161,8 +161,6 @@ class KnowledgeBaseService:
 
     def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
         print("HELLO")
-        if not session_id or not self.database.find_session_by_id(session_id):
-            session_id = self.database.create_session()
         # system_prompt = (
         #     "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         # )
@@ -276,7 +274,6 @@ class KnowledgeBaseService:
 
 
 
-
         
             
 
@@ -340,7 +337,7 @@ class KnowledgeBaseService:
         if all_points:
             self.vector_db.upsert(all_points)
             self.semantic_cache = SemanticCacheService("cache", float(0.35))
-            self.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
+            self.database.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
         else:
             return {"status": "error", "message": "No data extracted from the document."}
