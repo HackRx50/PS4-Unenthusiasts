@@ -2,7 +2,7 @@ from langchain.tools import StructuredTool
 from pydantic import BaseModel
 from services.knowledgeBase import KnowledgeBaseService
 from tools.todo import add_todo_item, list_todo_items, update_todo_item, delete_todo_item
-from tools.order import order,get_order_status,get_orders
+from tools.order import eligibility_check, generate_leads, order,get_order_status,get_orders
 
 kb=KnowledgeBaseService("knowledgebase")
 
@@ -60,8 +60,6 @@ order_tool = StructuredTool.from_function(
     args_schema=orderArgs
 )
 
-
-
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
@@ -75,5 +73,22 @@ order_status_tool = StructuredTool.from_function(
     description='Get the status of the order',
 )
 
+generate_leads_tool = StructuredTool.from_function(
+   name="GenerateLeads",
+   func=generate_leads,
+   description='Generate the leads',
+)
 
-tools = [knowledge_base_tool, add_todo_tool, list_todo_tool, update_todo_tool, delete_todo_tool,order_tool,get_order_tool,order_status_tool]
+eligibility_check_tool = StructuredTool.from_function(
+   name="EligibilityCheck",
+   func=eligibility_check,
+   description='Check the eligibility',
+)
+health_check_tool = StructuredTool.from_function(
+   name="HealthCheck",
+   func=eligibility_check,
+   description='Check the health of the server',
+)
+
+
+tools = [knowledge_base_tool, add_todo_tool, list_todo_tool, update_todo_tool, delete_todo_tool,order_tool,get_order_tool,order_status_tool,generate_leads_tool,eligibility_check_tool,health_check_tool]

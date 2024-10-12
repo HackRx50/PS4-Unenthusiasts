@@ -85,3 +85,75 @@ def get_order_status(order_id: str):
 
     except Exception as e:
         print("An error occurred:", str(e))
+
+
+def generate_leads():
+    mobile="123"
+    url = "https://hackrx-ps4.vercel.app/generate-lead"
+    headers = {
+        "team": "unenthusiats",
+        "mobile": mobile,
+        "x-team": "unenthusiats"
+    }
+    payload={
+        "mobile":mobile
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            print(f"Failed with status code: {response.status}")
+            print("Error:", response.text)
+
+    except Exception as e:
+        print("An error occurred:", str(e))
+        
+def eligibility_check():
+    mobile="123"
+    url = "https://hackrx-ps4.vercel.app/eligibility-check"
+    headers = {
+        "team": "unenthusiats",
+        "mobile": mobile,
+        "x-team": "unenthusiats"
+    }
+    payload={
+        "mobile":mobile
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            print(f"Failed with status code: {response.status}")
+            print("Error:", response.text)
+
+    except Exception as e:
+        print("An error occurred:", str(e))
+
+
+        
+def health_check():
+    mobile="123"
+    url = "https://hackrx-ps4.vercel.app/health-check"
+    headers = {
+        "team": "unenthusiats",
+        "mobile": mobile,
+        "x-team": "unenthusiats"
+    }
+    try:
+        response = requests.get(url,headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            print(f"Failed with status code: {response.status}")
+            print("Error:", response.text)
+
+    except Exception as e:
+        print("An error occurred:", str(e))
