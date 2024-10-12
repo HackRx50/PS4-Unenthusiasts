@@ -31,7 +31,7 @@ class Auth:
     def generate_jwt_token(self, user_id):
         payload = {
             'user_id': str(user_id),
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=25),
             'iat': datetime.datetime.utcnow()
         }
         token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
