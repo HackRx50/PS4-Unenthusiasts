@@ -101,7 +101,7 @@ class ActionExecuter:
             llm=self.llm,
             verbose=True,
             agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-            max_iterations=2
+            # max_iterations=3
         )
         captured_output = []
         for chunk in agent.stream(reactquery):
