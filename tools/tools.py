@@ -56,7 +56,7 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='Order or cancel a product from the store. Use product details from knowledge base before doing this to get the proper details and then use them',
+    description='Order or cancel a product from the store. Use product details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements in schema, use NONE. do not assume any fields.',
     args_schema=orderArgs
 )
 
@@ -64,7 +64,6 @@ get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
     description='Gets all the orders from the store for a user .',
-
 )
 
 order_status_tool = StructuredTool.from_function(

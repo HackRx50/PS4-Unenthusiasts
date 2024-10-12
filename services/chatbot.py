@@ -32,7 +32,7 @@ class Chatbot:
                     "action": String
                 }
                 query should be the question that the user asked , **NOTE** you need to use context + current question to formulate a query for vector data base which will be used to query the knowledge base, it should be detailed and represnt clearly what user is asking with the help of current question + previous context messages
-                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order, get all my orders
+                action should be the action that the user wants to be performed, this can be create/place an order, cancel order, get order status for a particular order you will need id of the order for this, get all my orders
                 if the user wants to place an order, then frame "action" where it first searches for the product details and then places order using these details
              """
 
