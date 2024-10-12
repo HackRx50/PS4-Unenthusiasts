@@ -2,7 +2,7 @@ import requests
 import uuid
 
 def order( productId: str, productName: str, productPrice: float, action: str):
-    mobile="q23"
+    mobile="123"
     url = "https://hackrx-ps4.vercel.app/order"
     
     _id = str(uuid.uuid4())
@@ -37,7 +37,7 @@ def order( productId: str, productName: str, productPrice: float, action: str):
 
 
 def get_orders():
-    mobile="q23"
+    mobile="123"
     url = "https://hackrx-ps4.vercel.app/orders"
     
     headers = {
@@ -61,7 +61,7 @@ def get_orders():
 
 
 def get_order_status(order_id: str):
-    mobile="q23"
+    mobile="123"
     url = f"https://hackrx-ps4.vercel.app/order-status?orderId{order_id}&mobile={mobile}"
     
     headers = {

@@ -61,8 +61,6 @@ order_tool = StructuredTool.from_function(
     args_schema=orderArgs
 )
 
-
-
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
