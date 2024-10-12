@@ -45,19 +45,20 @@ class Chatbot:
             "isQuery": boolean(true or false),
             "isAction": boolean,
             "query": String,
-            "action": String
+            "action": String,
         }
         Instructions:
-        1. **isQuery**: True if the user input is a query, otherwise False.
-        2. **isAction**: True if the user input is an action request (e.g., creating, canceling, or checking an order), otherwise False.
+        1. **isQuery**: true if the user input is a query, otherwise false.
+        2. **isAction**: true if the user input is an action request (e.g., creating, canceling, or checking an order), otherwise false.
         3. **query**: Formulate a detailed query that clearly represents what the user is asking. Combine the current input and relevant context to create this query, as it will be used to query a vector database for the knowledge base.
-        4. **action**: action can only be place an order, cancel order, check order status, get order status). frame the action which gives proper detail about what actions are to be performed and in which order
+        4. **action**: action can only be place an order, cancel order, check order status, get order status). Formulate a detailed action that clearly represents what the user is asking. Combine the current input and relevant context to create this action query, as it will be used to query a vector database for the knowledge base.
         - If the action requires an order (e.g., getting order status or canceling an order), retrieve the list of the user's orders first, then determine the specific order based on context or user input.
-        - If the action involves placing an order, consider this while framing the action: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details.
+        - If the action involves placing an order, consider this while framing the action: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details. If the requested item is not mentioned then check the context messages of previous chat to find out what item is being talked about
 
         if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated proper
 
-        Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context.
+
+        Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context. DONT WRITE "```" in the output
         """
 
 
@@ -90,4 +91,8 @@ class Chatbot:
         print("RES",response)
 
         return {**response,"msg_id":msg_id}
+
+
+# "suggested":array of strings,
+#         5. suggest better questions which suit the context or possible follow up questions that he might have? suggest 4 of them.
     

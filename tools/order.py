@@ -1,7 +1,8 @@
 import requests
 import uuid
+from typing import Union
 
-def order( productId: str, productName: str, productPrice: float, action: str):
+def order( productId: Union[str, int], productName: str, productPrice: float, action: str):
     if not productId or not productName or not productPrice or not action:
         return "Insufficient data. All parameters (productId, productName, productPrice, action) are required."
 
@@ -69,7 +70,7 @@ def get_orders():
 
 def get_order_status(order_id: str):
     mobile="12345678"
-    url = f"https://hackrx-ps4.vercel.app/order-status?orderId{order_id}&mobile={mobile}"
+    url = f"https://hackrx-ps4.vercel.app/order-status?orderId={order_id}&mobile={mobile}"
     
     headers = {
         "team": "unenthusiasts",
@@ -79,12 +80,12 @@ def get_order_status(order_id: str):
 
     try:
         response = requests.get(url, headers=headers)
-
+        print("this is order status response" ,response)
         if response.status_code == 200:
             data = response.json()
             return data
         else:
-            print(f"Failed with status code: {response.status}")
+            print(f"Failed with status code: {response.status_code}")
             print("Error:", response.text)
 
     except Exception as e:

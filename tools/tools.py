@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from services.knowledgeBase import KnowledgeBaseService
 from tools.todo import add_todo_item, list_todo_items, update_todo_item, delete_todo_item
 from tools.order import eligibility_check, generate_leads, order,get_order_status,get_orders
-
+from typing import Union
 kb=KnowledgeBaseService("knowledgebase")
 
 class KnowledgeBaseArgs(BaseModel):
@@ -48,7 +48,7 @@ delete_todo_tool = StructuredTool.from_function(
 
 class orderArgs(BaseModel):
 #   mobile: str
-  productId: str
+  productId: Union[str, int]
   productName: str
   productPrice:float
   action: str
@@ -56,10 +56,7 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='''Order or cancel a product from the store. Search details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str
-  productName: str
-  productPrice:float
-  action: str. ONLY CALL this function if you have sufficient details. STOP CHAIN AFTER THIS FUNCTION''',
+    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details. STOP CHAIN AFTER THIS FUNCTION''',
     args_schema=orderArgs
 )
 
