@@ -85,7 +85,6 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
   const [allFiles, setAllFiles] = useState([]); //all files available
 
   const getFiles = async () => {
-    console.log("Hello");
     const url = "http://localhost:8000/get_files";
 
     const response = await axios.get(url, {

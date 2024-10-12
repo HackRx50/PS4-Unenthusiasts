@@ -7,12 +7,14 @@ from models.request_models import QueryRequest
 from services.chatbot import Chatbot
 from services.pineCone import VectorPineConeDatabaseService
 from services.docuementProcessor import DocumentProcessor
+from services.contextDatabase import ContextDatabaseService as ContextService
 
 chat_router = APIRouter()
 knowledgebase_service = KnowledgeBaseService(collection_name="knowledgebase")
 document_service=DocumentProcessor()
 chatbot = Chatbot("chatbot")
 db_service = ContextDatabaseService()
+session_service = ContextService()
 
 # @chat_router.post("/addToKnowledgeBase")
 # async def upload_document(file: UploadFile = File(...)):
@@ -66,10 +68,23 @@ async def get_log_status(message_id: str):
 
 @chat_router.get("/get_files")
 def get_files():
-    """Retrieve all documents from the knowledge base."""
     try:
         documents = knowledgebase_service.get_documents()
         return {"documents": documents}
     except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred: {str(e)}")
+
+    # def find_session_by_id(self, session_id: str):
+    #     return self.db.sessions.find_one({"_id": session_id})
+
+
+@chat_router.get("/get_chats")
+def get_chats(session_id: str):
+    try:
+        sessions = session_service.find_session_by_id(session_id)
+        return {"sessions": sessions}
+    except Exception as e:
+        print("Error", e)
         raise HTTPException(
             status_code=500, detail=f"An error occurred: {str(e)}")
