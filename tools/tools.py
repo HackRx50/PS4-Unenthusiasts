@@ -50,7 +50,7 @@ class orderArgs(BaseModel):
 #   mobile: str
   productId: str
   productName: str
-  productPrice:float
+  productPrice:int
   action: str
 
 order_tool = StructuredTool.from_function(
