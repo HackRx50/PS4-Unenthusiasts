@@ -63,7 +63,7 @@ order_tool = StructuredTool.from_function(
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
-    description='Gets all the orders from the store for a user . Now check if the user needs anything else like placing order or get order status if yes then perform that action',
+    description='Gets all the orders from the store for a user and returns it . Now check if the user needs anything else like placing order or get order status if yes then perform that action',
 )
 
 order_status_tool = StructuredTool.from_function(

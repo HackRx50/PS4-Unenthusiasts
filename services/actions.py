@@ -13,7 +13,7 @@ from settings import Settings
 env=Settings()
 MONGO_URI = env.mongo_uri
 MONGO_DB_NAME=env.mongo_db_name
-from langchain_community.llms import OpenAI
+from langchain_openai import ChatOpenAI
 OPENAI_API_KEY = env.openai_api_key
 print(OPENAI_API_KEY)
 
@@ -73,7 +73,7 @@ class ContextDatabaseService:
 
 class ActionExecuter:
     def __init__(self):
-        self.llm = OpenAI(openai_api_key=OPENAI_API_KEY)
+        self.llm = ChatOpenAI(openai_api_key=OPENAI_API_KEY, model="gpt-4o")
         self.tools = tools 
         self.llmservice=LLMService()
     
@@ -91,7 +91,9 @@ class ActionExecuter:
             # response_stream = agent.stream(reactquery)
             captured_output2 = []
             for chunk in agent.stream(reactquery):
-                captured_output2.append(chunk)
+                # newstr=str(chunk)
+                print(chunk)
+                captured_output2.append(str(chunk))
             combined_output = ''.join([str(chunk) for chunk in captured_output2])
 
 
@@ -107,7 +109,7 @@ class ActionExecuter:
                             
                 }
             ])
-            
+            # res="GN"
             print(res)
             return res
 

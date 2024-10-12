@@ -111,7 +111,9 @@ class Chatbot:
         return {"gpt_response": json.dumps({
                 "query_response": response["gpt_response"],
                 "action_response": response["action_response"]
-            })}
+            }),
+            "session_id": session_id,
+            }
 
 
 # "suggested":array of strings,
