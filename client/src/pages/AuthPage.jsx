@@ -16,11 +16,11 @@ import {
   InputRightElement,
   CardFooter,
 } from "@chakra-ui/react";
-import { FaRegUser } from "react-icons/fa";
+import { FaPhoneAlt, FaRegUser } from "react-icons/fa";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { MdAlternateEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"
+import axios from "axios";
 import { useUser } from "../context/UserContext";
 
 const AuthPage = () => {
@@ -29,22 +29,26 @@ const AuthPage = () => {
   const handleClickShowPassWord = () => setShowPassWord(!showPassWord);
   const [showRePassWord, setShowRePassWord] = useState(false);
   const handleClickShowRePassWord = () => setShowRePassWord(!showRePassWord);
-  const navigate = useNavigate()
-  const [activeTab, setactiveTab] = useState(1)
+  const navigate = useNavigate();
+  const [activeTab, setactiveTab] = useState(1);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
 
   const handleSubmit = async () => {
     const baseURL = "http://127.0.0.1:8000";
     const url = `${baseURL}/${activeTab === 0 ? "login" : "register"}`;
-    const data = activeTab === 0 ? { email, password } : { username, email, password };
+    const data =
+      activeTab === 0
+        ? { email, password }
+        : { username, email, password, phone };
 
     try {
       const response = await axios.post(url, data);
       console.log(response.data);
-      login(response.data)
+      login(response.data);
       navigate("/home");
     } catch (error) {
       console.error(error);
@@ -137,6 +141,17 @@ const AuthPage = () => {
                           placeholder="Enter email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </InputGroup>
+                      <InputGroup>
+                        <InputLeftElement>
+                          <FaPhoneAlt className="text-gray-400" />
+                        </InputLeftElement>
+                        <Input
+                          type="tel"
+                          placeholder="phone number"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
                         />
                       </InputGroup>
                       <InputGroup size="md">

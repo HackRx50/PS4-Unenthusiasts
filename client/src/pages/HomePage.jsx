@@ -82,7 +82,7 @@ const HomePage = () => {
   useEffect(() => {
     if (isAction && msgId) {
       axios
-        .get(`http://127.0.0.1:8000/log/${msgId}`)
+        .get(`http://localhost:8000/log/${msgId}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

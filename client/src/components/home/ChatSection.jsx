@@ -42,6 +42,7 @@ import { FaCircle } from "react-icons/fa";
 import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
+import ReactMarkdown from "react-markdown";
 
 const ChatSection = ({
   getChatData,
@@ -298,7 +299,24 @@ const ChatSection = ({
                               }`
                         }`}
                       >
-                        {message.content}
+                        {message.sender === "user" ? (
+                          message.content
+                        ) : (
+                          <div className="flex flex-col w-full">
+                            <ReactMarkdown>
+                              {message.content.slice(
+                                0,
+                                message.content.lastIndexOf("(")
+                              )}
+                            </ReactMarkdown>
+                            <div className="text-sky-400 mt-7">
+                              {message.content.slice(
+                                message.content.lastIndexOf("(") + 1,
+                                message.content.lastIndexOf(")")
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
