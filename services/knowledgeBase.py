@@ -192,11 +192,7 @@ class KnowledgeBaseService:
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
 
-        self.database.update_session_context(session_id, {
-            "query": actual_query,
-            "gpt_response": gpt_response,
-            "msg_id":msg_id
-        })
+      
 
         return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):

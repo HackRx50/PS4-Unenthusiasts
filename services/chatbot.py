@@ -48,6 +48,7 @@ class Chatbot:
             "isAction": boolean,
             "query": String,
             "action": String,
+            "extra":String
         }
         Instructions:
         1. **isQuery**: true if the user input is a query, otherwise false.
@@ -55,10 +56,10 @@ class Chatbot:
         3. **query**: Formulate a detailed query that clearly represents what the user is asking. Combine the current input and relevant context to create this query, as it will be used to query a vector database for the knowledge base.
         4. **action**: action can only be place an order, cancel order, check order status, get order status). Formulate a detailed action that clearly represents what the user is asking. Combine the current input and relevant context to create this action query, as it will be used to query a vector database for the knowledge base.
         - If the action requires an order (e.g., getting order status or canceling an order), retrieve the list of the user's orders first, then determine the specific order based on context or user input.
-        - If the action involves placing an order, consider this while framing the action: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details. If the requested item is not mentioned then check the context messages of previous chat to find out what item is being talked about
+        - If the action involves placing an order, frame the action by mentioning everything in correct order: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details. If the requested item is not mentioned then check the context messages of previous chat to find out what item is being talked about
 
-        if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated proper
-
+        if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated properly.
+        if the question is neither query nor action then write its response in "extra" which could be you being a friendly bot, dont answer any queries that are out of context here, just say ask related to the documents uploaded or ask me to perform actions. otherwise leave it blank
 
         Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context. DONT WRITE "```" in the output
         """
@@ -82,21 +83,35 @@ class Chatbot:
         response = None
         if res["isQuery"]:
             response = self.kb.query_knowledge_base(res["query"],msg_id,session_id,document_id,actual_query=question,context_messages=context)
-        else:
+        elif res["isAction"]:
             response={"gpt_response":"Action queued successfully"}
+        else:
+            # response={"gpt_response":"Hello, please ask either queries based on your uploaded documents or ask me to perform one of the following actions: place order, get orders, get order status"}
+            response={"gpt_response":res["extra"]}
 
         if res["isAction"]:
             # msg_id = str(uuid.uuid4())
             message=f"""This is user query: {res["action"]}"""
-            if response is not None:
+            if response is not None and res["isQuery"]:
                 message+=f"""This is the previous response context : {response["gpt_response"]}"""
       
             print(f"Sending message: {message}")
             actionRes=self.actionExecutor.sync_executor(message)
             response["action_response"]=actionRes
-        
+        print("RESPONSE",response)
 
-        return {**response,"msg_id":msg_id}
+        self.database.update_session_context(session_id, {
+            "query": question,
+            "gpt_response": json.dumps({
+                "query_response": response["gpt_response"],
+                "action_response": response["action_response"]
+            }),
+        })
+
+        return {"gpt_response": json.dumps({
+                "query_response": response["gpt_response"],
+                "action_response": response["action_response"]
+            })}
 
 
 # "suggested":array of strings,
