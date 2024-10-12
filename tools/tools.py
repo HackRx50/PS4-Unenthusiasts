@@ -69,7 +69,7 @@ get_order_tool = StructuredTool.from_function(
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
-    description='Get the status of the order. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string.',
+    description='Get the status of the order. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid',
 )
 
 generate_leads_tool = StructuredTool.from_function(

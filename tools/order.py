@@ -8,7 +8,8 @@ def order( productId: str, productName: str, productPrice: float, action: str):
     mobile="12345"
     url = "https://hackrx-ps4.vercel.app/order"
     
-    _id ="orderid"+str(uuid.uuid4())
+    _id =str(uuid.uuid4())
+    # _id ="orderid"+str(uuid.uuid4())
 
     headers = {
         "team": "unenthusiasts",      
