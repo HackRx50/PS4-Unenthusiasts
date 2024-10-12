@@ -2,6 +2,7 @@ from services.llm import LLMService
 from services.knowledgeBase import KnowledgeBaseService
 from services.messageQueue import MessageQueueService
 from services.contextDatabase import ContextDatabaseService
+from services.actions import ActionExecuter
 import json
 import uuid
 
@@ -12,6 +13,7 @@ class Chatbot:
         self.kb=KnowledgeBaseService("knowledgebase")
         self.messageQueue = MessageQueueService(name, "localhost")
         self.database = ContextDatabaseService()
+        self.actionExecutor= ActionExecuter()
         
     def answer(self, question,session_id,document_id,user_id):
         msg_id = str(uuid.uuid4())
@@ -85,10 +87,14 @@ class Chatbot:
 
         if res["isAction"]:
             # msg_id = str(uuid.uuid4())
-            message=json.dumps({"user query":question,"response":response, "action":res["action"]})
+            message=f"""This is user query: {res["action"]}"""
+            if response is not None:
+                message+=f"""This is the previous response context : {response["gpt_response"]}"""
+      
             print(f"Sending message: {message}")
-            self.messageQueue.publish_message(message,msg_id,session_id)
-        print("RES",response)
+            actionRes=self.actionExecutor.sync_executor(message)
+            response["action_response"]=actionRes
+        
 
         return {**response,"msg_id":msg_id}
 

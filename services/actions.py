@@ -71,63 +71,101 @@ class ContextDatabaseService:
 
 
 class ActionExecuter:
-    def __init__(self, chatbotName,num_workers):
-        self.message_queue = MessageQueueService(chatbotName,"localhost")
-        self.num_workers = num_workers
+    def __init__(self):
+        pass
+        # self.message_queue = MessageQueueService(chatbotName,"localhost")
+        # self.num_workers = num_workers
         self.llm = OpenAI(openai_api_key=OPENAI_API_KEY)
-        self.db_service = ContextDatabaseService()  
+        # self.db_service = ContextDatabaseService()  
         self.tools = tools 
-        self.executor = ThreadPoolExecutor(max_workers=self.num_workers)  
+        self.llmservice=LLMService()
+        # self.executor = ThreadPoolExecutor(max_workers=self.num_workers)  
     
 
-    def on_message(self, ch, method, properties, body):
-        # future = self.executor.submit(self.process_message, body,properties)
-        # future.add_done_callback(lambda x:
-        #     print(f"Task completed: {x.result()}"))
-        ch.basic_ack(delivery_tag=method.delivery_tag) 
-        self.process_message(body,properties)
+    # def on_message(self, ch, method, properties, body):
+    #     # future = self.executor.submit(self.process_message, body,properties)
+    #     # future.add_done_callback(lambda x:
+    #     #     print(f"Task completed: {x.result()}"))
+    #     ch.basic_ack(delivery_tag=method.delivery_tag) 
+    #     self.process_message(body,properties)
         
         
 
-    def process_message(self, body,properties):
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")  # Decode from bytes to string
-            body = json.loads(body)  
-        reactquery = body["action"]
-        print(f"Received message: {reactquery} {type(reactquery)}")
+    # def process_message(self, body,properties):
+    #     if isinstance(body, bytes):
+    #         body = body.decode("utf-8")  # Decode from bytes to string
+    #         body = json.loads(body)  
+    #     reactquery = body["action"]
+    #     print(f"Received message: {reactquery} {type(reactquery)}")
 
-        agent = initialize_agent(
-            tools=self.tools,
-            llm=self.llm,
-            verbose=True,
-            agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-            max_iterations=2
-        )
-        captured_output = []
-        for chunk in agent.stream(reactquery):
-            captured_output.append(chunk)
-        combined_output = ''.join([str(chunk) for chunk in captured_output])
+    #     agent = initialize_agent(
+    #         tools=self.tools,
+    #         llm=self.llm,
+    #         verbose=True,
+    #         agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    #         max_iterations=2
+    #     )
+    #     captured_output = []
+    #     response= agent.run(reactquery)
+            
 
-        # print("Full captured output:")
-        # print(combined_output)
-        self.db_service.save_log(properties.message_id, combined_output)
-        session_id = properties.headers.get("session_id") if properties.headers else None
-
-        self.db_service.update_session_context(session_id, properties.message_id, combined_output)
+        
+    #     # self.db_service.save_log(properties.message_id, combined_output)
+    #     session_id = properties.headers.get("session_id") if properties.headers else None
 
 
-        # response = agent.run(body)
-        # print(f"Processed message: {response}")
 
-        return combined_output 
+    #     # response = agent.run(body)
+    #     # print(f"Processed message: {response}")
+
+    #     return response 
         
 
-    def start_consuming(self):
-        self.message_queue.consume_message( callback=self.on_message)
-        print(f"Listening for messages on queue with {self.num_workers} workers...")
+    # def start_consuming(self):
+    #     self.message_queue.consume_message( callback=self.on_message)
+    #     print(f"Listening for messages on queue with {self.num_workers} workers...")
 
         
 
-    def stop_consuming(self):
-        if self.connection:
-            self.connection.close()
+    # def stop_consuming(self):
+    #     if self.connection:
+    #         self.connection.close()
+
+
+    def sync_executor(self, reactquery):
+        try:
+            print("react query:", reactquery)
+            agent = initialize_agent(
+                tools=self.tools,
+                llm=self.llm,
+                verbose=True,
+                agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+                max_iterations=2
+            )
+            response_stream = agent.stream(reactquery)
+            response = []
+            
+            for message_chunk in response_stream:
+                print("message chunk:", message_chunk)
+                response.append(message_chunk)  # Correctly appending chunks to the list
+            
+            combined_output = ''.join([str(chunk) for chunk in response])
+
+            # Generate a concise response using llmservice
+            res = self.llmservice.generate_response(messages=[
+                {
+                    "role": "user",
+                    "content": f"This is the user query: {reactquery}\n"
+                            f"This is the complete log of the agent executing the task for the query:\n"
+                            f"{combined_output}\n\n"
+                            "I want you to provide a concise response. "
+                            "**NOTE**: All data points should be included."
+                }
+            ])
+            
+            print(res)
+            return res
+
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return None
