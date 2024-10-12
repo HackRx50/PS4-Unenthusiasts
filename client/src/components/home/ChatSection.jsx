@@ -43,89 +43,6 @@ import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
 
-const sampleFileNames = [
-  {
-    id: 1,
-    name: "Bajaj.pptx",
-  },
-  {
-    id: 2,
-    name: "Hero.docx",
-  },
-  {
-    id: 3,
-    name: "Honda.pdf",
-  },
-  {
-    id: 4,
-    name: "Yamaha.pdf",
-  },
-  {
-    id: 5,
-    name: "Suzuki.pdf",
-  },
-  {
-    id: 6,
-    name: "TVS.pdf",
-  },
-  {
-    id: 7,
-    name: "Royal Enfield.pdf",
-  },
-  {
-    id: 8,
-    name: "KTM.pdf",
-  },
-  {
-    id: 9,
-    name: "Mahindra.pdf",
-  },
-  {
-    id: 10,
-    name: "Vespa.pdf",
-  },
-  {
-    id: 11,
-    name: "Ducati.pdf",
-  },
-  {
-    id: 12,
-    name: "BMW.pdf",
-  },
-  {
-    id: 13,
-    name: "Harley-Davidson.pdf",
-  },
-  {
-    id: 14,
-    name: "Aprilia.pdf",
-  },
-  {
-    id: 15,
-    name: "Triumph.pdf",
-  },
-  {
-    id: 16,
-    name: "Kawasaki.pdf",
-  },
-  {
-    id: 17,
-    name: "MV Agusta.pdf",
-  },
-  {
-    id: 18,
-    name: "Benelli.pdf",
-  },
-  {
-    id: 19,
-    name: "Piaggio.pdf",
-  },
-  {
-    id: 20,
-    name: "Moto Guzzi.pdf",
-  },
-];
-
 const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
   const { user } = useUser();
   const [message, setMessage] = useState("");
@@ -165,16 +82,39 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
   } = useDisclosure();
   const btnFilesViewRef = useRef();
 
+  const [allFiles, setAllFiles] = useState([]); //all files available
+
+  const getFiles = async () => {
+    console.log("Hello");
+    const url = "http://localhost:8000/get_files";
+
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${user?.access_token}`,
+      },
+    });
+
+    setAllFiles(response.data.documents.document_names);
+  };
+
+  useEffect(() => {
+    getFiles();
+  }, []);
+
   const [filteredFiles, setFilteredFiles] = useState([]); //actual files to be used for query
   const [selectedFiles, setSelectedFiles] = useState([]); // files used for filtering in modal
   const [searchedFiles, setSearchedFiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    setSearchedFiles(allFiles);
+  }, [allFiles]);
+
+  useEffect(() => {
     if (searchQuery.trim() === "") {
-      setSearchedFiles(sampleFileNames);
+      setSearchedFiles(allFiles);
     } else {
-      const files = sampleFileNames.filter((file) =>
+      const files = allFiles.filter((file) =>
         file.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSearchedFiles(files);
@@ -282,7 +222,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
         }`}
       >
         <div className="w-full h-full flex flex-col gap-2 items-start justify-center relative">
-          <div className="w-[80%] flex py-2 items-center justify-center">
+          <div className="w-[40rem] flex py-2 items-center justify-center">
             {filteredFiles.length > 0 && (
               <div className="text-xs w-20 text-gray-400">Using Files</div>
             )}
@@ -293,7 +233,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                   className="flex items-center gap-2 px-2 py-1 bg-white text-sm rounded-2xl"
                 >
                   <FaCircle className="text-green-500" />
-                  <div className="text-xs">{file.name}</div>
+                  <div className="text-xs w-40 truncate">{file.name}</div>
                 </div>
               ))}
             </div>
@@ -450,7 +390,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                           }
                         }}
                       >
-                        <div className="text-gray-700 pr-4 text-sm">
+                        <div className="text-gray-700 w-40 truncate pr-4 text-sm">
                           {file.name.split(".")[0]}
                         </div>
                         <div className="text-gray-400 text-xs">
@@ -483,9 +423,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                 colorScheme="blue"
                 onClick={() => {
                   setFilteredFiles(
-                    sampleFileNames.filter((file) =>
-                      selectedFiles.includes(file.id)
-                    )
+                    allFiles.filter((file) => selectedFiles.includes(file.id))
                   );
                   onFilesViewClose();
                 }}
