@@ -1,16 +1,16 @@
 import requests
 import uuid
 
-def order( productId: str, productName: str, productPrice: float, action: str):
-    mobile="123"
+def order( productId: str, productName: str, productPrice: int, action: str):
+    mobile="12345"
     url = "https://hackrx-ps4.vercel.app/order"
     
     _id = str(uuid.uuid4())
 
     headers = {
-        "team": "unenthusiats",      
+        "team": "unenthusiasts",      
         "mobile": mobile,
-        "x-team": "unenthusiats" 
+        "x-team": "unenthusiasts" 
     }
 
     payload = {
@@ -21,6 +21,8 @@ def order( productId: str, productName: str, productPrice: float, action: str):
         "id": _id,
         "mobile": mobile
     }
+
+    print("payload", payload)
 
     try:
         response = requests.post(url, json=payload, headers=headers)
@@ -37,7 +39,7 @@ def order( productId: str, productName: str, productPrice: float, action: str):
 
 
 def get_orders():
-    mobile="123"
+    mobile="12345"
     url = "https://hackrx-ps4.vercel.app/orders"
     
     headers = {
@@ -62,7 +64,7 @@ def get_orders():
 
 
 def get_order_status(order_id: str):
-    mobile="123"
+    mobile="12345"
     url = f"https://hackrx-ps4.vercel.app/order-status?orderId{order_id}&mobile={mobile}"
     
     headers = {
