@@ -2,12 +2,13 @@ from langchain.tools import StructuredTool
 from pydantic import BaseModel
 from services.knowledgeBase import KnowledgeBaseService
 from tools.todo import add_todo_item, list_todo_items, update_todo_item, delete_todo_item
-
+from tools.order import order,get_order_status,get_orders
 
 kb=KnowledgeBaseService("knowledgebase")
 
 class KnowledgeBaseArgs(BaseModel):
     query: str
+    document_id: str
 knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
     func=kb.search_knowledge_base,
@@ -44,4 +45,36 @@ delete_todo_tool = StructuredTool.from_function(
     description="Delete a to-do item. Input should be the to-do item ID."
 )
 
-tools = [knowledge_base_tool, add_todo_tool, list_todo_tool, update_todo_tool, delete_todo_tool]
+
+class orderArgs(BaseModel):
+  id: str
+  mobile: str
+  productId: str
+  productName: str
+  productPrice:float
+  action: str
+
+order_tool = StructuredTool.from_function(
+    name="Order",
+    func=order,
+    description='Order a product from the store.',
+    args_schema=orderArgs
+)
+
+
+
+get_order_tool = StructuredTool.from_function(
+    name="GetOrders",
+    func=get_orders,
+    description='Gets all the orders from the store for a user .',
+
+)
+
+order_status_tool = StructuredTool.from_function(
+   name="OrderStatus",
+   func=get_order_status,
+    description='Get the status of the order',
+)
+
+
+tools = [knowledge_base_tool, add_todo_tool, list_todo_tool, update_todo_tool, delete_todo_tool,order_tool,get_order_tool,order_status_tool]
