@@ -10,6 +10,8 @@ from services.llm import LLMService
 from tools.tools import tools
 from langchain_core.prompts import PromptTemplate
 from settings import Settings
+from services.llm import LLMService
+
 env=Settings()
 MONGO_URI = env.mongo_uri
 MONGO_DB_NAME=env.mongo_db_name
@@ -63,6 +65,7 @@ class ContextDatabaseService:
 
     def update_session_context(self, session_id: str, message_id: str, combined_output: dict):
     # Update the context array where msg_id matches message_id and set actionresponse
+        
         return self.db.sessions.update_one(
             {"_id": session_id, "context.msg_id": message_id},
             {"$set": {"context.$.actionresponse": combined_output}}
@@ -72,6 +75,7 @@ class ContextDatabaseService:
 
 class ActionExecuter:
     def __init__(self, chatbotName,num_workers):
+        self.llm_service=LLMService()
         self.message_queue = MessageQueueService(chatbotName,"localhost")
         self.num_workers = num_workers
         self.llm = OpenAI(openai_api_key=OPENAI_API_KEY)
@@ -101,18 +105,37 @@ class ActionExecuter:
             llm=self.llm,
             verbose=True,
             agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+            max_iterations=2,
+
+            
         )
         captured_output = []
         for chunk in agent.stream(reactquery):
             captured_output.append(chunk)
         combined_output = ''.join([str(chunk) for chunk in captured_output])
-
+        print("captured output ",captured_output[-1])
         print("Full captured output:")
         print(combined_output)
         self.db_service.save_log(properties.message_id, combined_output)
         session_id = properties.headers.get("session_id") if properties.headers else None
 
-        self.db_service.update_session_context(session_id, properties.message_id, combined_output)
+        res=self.llm_service.generate_response(messages=[
+            {
+                "role":"system",
+                "content":"You would get logs of React agent, Your job is to clean the output and provide a Human readable of what the agent did in first person pov"
+
+            },
+
+            {
+                "role":"user",
+                "content":combined_output
+
+            }
+        ])
+
+        print('RES this',res)
+
+        self.db_service.update_session_context(session_id, properties.message_id, res)
 
 
         # response = agent.run(body)

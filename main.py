@@ -6,12 +6,15 @@ import multiprocessing
 import uvicorn
 from services.actions import ActionExecuter  
 from services.docuementProcessor import DocumentProcessor
+from services.customReact import CustomReact
 
 app = FastAPI()
 origins = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",  
 ]
+
+custom=CustomReact()
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +50,9 @@ def start_docuemnt_processor():
 
 
 if __name__ == "__main__":
+    val=custom.answer("Place an order for a wireless bluetooth speaker")
+    print(val)
+
     fastapi_process = multiprocessing.Process(target=start_fastapi)
     action_executer_process = multiprocessing.Process(target=start_action_executer)
     document_upload_process = multiprocessing.Process(target=start_docuemnt_processor)
