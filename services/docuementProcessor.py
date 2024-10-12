@@ -69,7 +69,7 @@ class DocumentProcessor:
 
             message=file.filename
             
-            self.messageQueue.publish_message(message,docuemntId)
+            self.messageQueue.publish_message1(message,docuemntId)
             return {"message": "File uploaded successfully", "details": message}
         except Exception as e:
             # print(e.with_traceback())
