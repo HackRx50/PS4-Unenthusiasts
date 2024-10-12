@@ -30,7 +30,7 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { BiLogOut } from "react-icons/bi";
 import { IoMdPricetags } from "react-icons/io";
 import { IoSearch } from "react-icons/io5";
-import { MdCheckCircle, MdNightlight } from "react-icons/md";
+import { MdNightlight } from "react-icons/md";
 import { FaSun } from "react-icons/fa6";
 import NullImage from "../../assets/BgImageNull.svg";
 import { BsStars } from "react-icons/bs";
@@ -44,6 +44,7 @@ import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
 import ReactMarkdown from "react-markdown";
+import toast, { Toaster } from "react-hot-toast";
 
 const ChatSection = ({
   setLoading,
@@ -80,8 +81,23 @@ const ChatSection = ({
           Authorization: `Bearer ${user?.access_token}`,
         },
       })
+      .then((response) => {
+        toast("Files fetched successfully", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+      })
       .catch((error) => {
-        console.error("Error:", error);
+        toast("Error", {
+          style: {
+            border: "1px solid #EF4444",
+            padding: "16px",
+            color: "#EF4444",
+          },
+        });
       })
       .finally(() => {
         setLoading(false);
@@ -117,11 +133,10 @@ const ChatSection = ({
   const [fileUpload, setFileUpload] = useState(null);
 
   const handleFileUpload = async () => {
+    setLoading(true);
     let formData = new FormData();
     formData.append("file", fileUpload);
-
-    const url = "http://localhost:8000/upload_document";
-
+    const url = "http://localhost:8000/addToKnowledgeBase";
     const response = await axios
       .post(url, formData, {
         headers: {
@@ -130,8 +145,28 @@ const ChatSection = ({
           Accept: "application/json",
         },
       })
+      .then(() => {
+        toast("File uploaded successfully", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+      })
       .catch((error) => {
         console.error("Error:", error);
+        toast("Error", {
+          style: {
+            border: "1px solid #EF4444",
+            padding: "16px",
+            color: "#EF4444",
+          },
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+        getFiles();
       });
   };
 
@@ -144,18 +179,15 @@ const ChatSection = ({
   const finalRef = useRef(null);
 
   const handleSubmit = async () => {
+    setLoading(true);
     if (!message.trim()) return;
-
     const url = "http://localhost:8000/chat";
-
     const body = {
       query: message,
     };
-
     if (filteredFiles.length > 0) {
       body.document_id = filteredFiles;
     }
-
     try {
       const response = await axios.post(url, body, {
         params: {
@@ -165,11 +197,26 @@ const ChatSection = ({
           Authorization: `Bearer ${user?.access_token}`,
         },
       });
-      console.log("Response:", response.data);
+      toast("Message Sent", {
+        style: {
+          border: "1px solid #10B981",
+          padding: "16px",
+          color: "#10B981",
+        },
+      });
       setMessage("");
       getChatData();
     } catch (error) {
       console.error("Error:", error);
+      toast("Error", {
+        style: {
+          border: "1px solid #EF4444",
+          padding: "16px",
+          color: "#EF4444",
+        },
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -536,6 +583,7 @@ const ChatSection = ({
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <Toaster />
     </div>
   );
 };

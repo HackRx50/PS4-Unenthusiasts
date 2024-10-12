@@ -22,6 +22,7 @@ import { MdAlternateEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useUser } from "../context/UserContext";
+import toast, { Toaster } from "react-hot-toast";
 
 const AuthPage = ({ setLoading }) => {
   const { login } = useUser();
@@ -48,11 +49,23 @@ const AuthPage = ({ setLoading }) => {
 
     try {
       const response = await axios.post(url, data);
-      console.log(response.data);
+      toast("Success", {
+        style: {
+          border: "1px solid #10B981",
+          padding: "16px",
+          color: "#10B981",
+        },
+      });
       login(response.data);
       navigate("/home");
     } catch (error) {
-      console.error(error);
+      toast("Error", {
+        style: {
+          border: "1px solid #EF4444",
+          padding: "16px",
+          color: "#EF4444",
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -191,6 +204,7 @@ const AuthPage = ({ setLoading }) => {
           </Stack>
         </Card>
       </div>
+      <Toaster />
     </div>
   );
 };
