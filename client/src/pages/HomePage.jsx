@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { ChatSection, Sidebar } from "../components/home";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
-import { useToast } from "@chakra-ui/react";
 
 const HomePage = () => {
   const { user } = useUser();
@@ -72,44 +71,6 @@ const HomePage = () => {
     }
   }, [activeChatId, chatData]);
 
-  const [isAction, setIsAction] = useState(false);
-  const [msgId, setMsgId] = useState(null);
-
-  const [logStatus, setLogStatus] = useState(null);
-
-  const toast = useToast();
-
-  useEffect(() => {
-    if (isAction && msgId) {
-      axios
-        .get(`http://localhost:8000/log/${msgId}`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          } else {
-            setIsAction(false);
-            return response.json();
-          }
-        })
-        .then((data) => setLogStatus(data))
-        .catch((error) => console.error("Error:", error));
-    } else {
-      setLogStatus(null);
-    }
-  }, [msgId, isAction]);
-
-  useEffect(() => {
-    if (logStatus) {
-      toast({
-        title: "Log Status",
-        description: logStatus,
-        status: "info",
-        duration: 9000,
-        isClosable: true,
-      });
-    }
-  }, [logStatus]);
-
   return (
     <div className="h-full w-full flex items-center justify-center">
       <Sidebar
@@ -124,8 +85,6 @@ const HomePage = () => {
         activeChatId={activeChatId}
         currentChatData={currentChatData}
         darkMode={darkMode}
-        setIsAction={setIsAction}
-        setMsgId={setMsgId}
         setDarkMode={setDarkMode}
       />
     </div>
