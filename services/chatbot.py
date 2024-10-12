@@ -38,7 +38,7 @@ class Chatbot:
         #      """
 
         system_prompt = """
-        **NOTE**: ONLY GIVE RESPONSE IN JSON. NOTHING ELSE.
+        **NOTE**: ONLY GIVE RESPONSE IN JSON. NOTHING ELSE. DONT WRITE "```" in the output. JUST PROVIDE JSON OBJECT
         You are tasked with identifying whether the user's input is a query or an action. Use both the current input and previous context messages to formulate a detailed response. 
         Strictly adhere to the following format:
         {
@@ -51,7 +51,7 @@ class Chatbot:
         1. **isQuery**: True if the user input is a query, otherwise False.
         2. **isAction**: True if the user input is an action request (e.g., creating, canceling, or checking an order), otherwise False.
         3. **query**: Formulate a detailed query that clearly represents what the user is asking. Combine the current input and relevant context to create this query, as it will be used to query a vector database for the knowledge base.
-        4. **action**: action can be like place an order, cancel order, check order status, get order status). frame the action which gives proper detail about what actions are to be performed and in which order
+        4. **action**: action can only be place an order, cancel order, check order status, get order status). frame the action which gives proper detail about what actions are to be performed and in which order
         - If the action requires an order (e.g., getting order status or canceling an order), retrieve the list of the user's orders first, then determine the specific order based on context or user input.
         - If the action involves placing an order, consider this while framing the action: first search the knowledge base for the requested item, then proceed with the order placement using the retrieved details.
 

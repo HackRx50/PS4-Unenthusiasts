@@ -14,7 +14,7 @@ class LLMService:
             messages += context_messages 
 
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini", 
+            model="gpt-4o", 
             messages=messages,
             
         )

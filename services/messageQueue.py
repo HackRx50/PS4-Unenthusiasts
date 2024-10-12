@@ -8,6 +8,14 @@ class MessageQueueService:
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.queue_name)
 
+    def publish_message1(self, message: str,document_id:str):
+        properties = pika.BasicProperties(
+            message_id=document_id
+        )
+
+        self.channel.basic_publish(exchange='', routing_key=self.queue_name, body=message,properties=properties)
+        print(f"Message published: {message}")
+
 
     def publish_message(self, message: str,msg_id:str,session_id:str):
         print(f"Publishing message: {message}",msg_id)

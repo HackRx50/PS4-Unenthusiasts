@@ -107,8 +107,8 @@ class ActionExecuter:
             captured_output.append(chunk)
         combined_output = ''.join([str(chunk) for chunk in captured_output])
 
-        print("Full captured output:")
-        print(combined_output)
+        # print("Full captured output:")
+        # print(combined_output)
         self.db_service.save_log(properties.message_id, combined_output)
         session_id = properties.headers.get("session_id") if properties.headers else None
 

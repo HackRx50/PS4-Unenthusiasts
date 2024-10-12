@@ -90,9 +90,10 @@ class KnowledgeBaseService:
 
     # Check if the query is present in the cache
         startcache=time.time()
-        # cache_results = self.semantic_cache.search_cache(query)
-        # if cache_results is not None:
-        #     return cache_results
+        cache_results = self.semantic_cache.search_cache(query)
+        if cache_results is not None:
+            print("cache hit")
+            return cache_results
         endcache=time.time()
         durationcache=endcache-startcache
         print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
@@ -151,7 +152,7 @@ class KnowledgeBaseService:
         duration_util=util_end-util_start
         print(f"Time taken to fetch from utils: {duration_util:.4f} seconds")
         # Add the query to the cache for future use
-        # self.semantic_cache.add_to_cache(query, information)
+        self.semantic_cache.add_to_cache(query, information)
 
         return information
 

@@ -56,7 +56,10 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='Order or cancel a product from the store. Search details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use product price as float only. ONLY CALL this function if you have sufficient details. DO NOT CALL GET ORDER STATUS AFTER PLACING ORDER',
+    description='''Order or cancel a product from the store. Search details from knowledge base before doing this to get the proper details and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str
+  productName: str
+  productPrice:float
+  action: str. ONLY CALL this function if you have sufficient details. STOP CHAIN AFTER THIS FUNCTION''',
     args_schema=orderArgs
 )
 
@@ -69,7 +72,7 @@ get_order_tool = StructuredTool.from_function(
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
-    description='Get the status of the order. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid',
+    description='Get the status of the order.DONT CALL THIS UNLESS ASKED FOR IN THE question. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid',
 )
 
 generate_leads_tool = StructuredTool.from_function(
