@@ -159,7 +159,7 @@ class KnowledgeBaseService:
 
         
 
-    def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
+    def query_knowledge_base(self, query: str, msg_id:str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
         # system_prompt = (
         #     "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         # )
@@ -184,7 +184,7 @@ class KnowledgeBaseService:
         # print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
 
         user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
-        print("HELLO1")
+        # print("HELLO1")
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(context_messages)
 
@@ -194,6 +194,7 @@ class KnowledgeBaseService:
         self.database.update_session_context(session_id, {
             "query": actual_query,
             "gpt_response": gpt_response,
+            "msg_id":msg_id
         })
 
         return {"gpt_response":gpt_response,"session_id":session_id}
