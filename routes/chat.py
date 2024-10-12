@@ -53,7 +53,7 @@ def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Quer
 @chat_router.get("/log/{message_id}")
 async def get_log_status(message_id: str):
     try:
-        log = db_service.get_log_by_id(message_id)  # Directly call the database service
+        log = db_service.get_log_by_id(message_id)  
         if log:
             return {"message_id": message_id, "output": log["output"]}
         else:
