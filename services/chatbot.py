@@ -14,7 +14,7 @@ class Chatbot:
         self.database = ContextDatabaseService()
         
     def answer(self, question,session_id,document_id,user_id):
-        msg_id = None
+        msg_id = str(uuid.uuid4())
         context_messages=[]
         if session_id is not None:
             session_data = self.database.find_session_by_id(session_id)
@@ -76,15 +76,15 @@ class Chatbot:
 
         response = None
         if res["isQuery"]:
-            response = self.kb.query_knowledge_base(res["query"],session_id,document_id,actual_query=question,context_messages=context)
+            response = self.kb.query_knowledge_base(res["query"],msg_id,session_id,document_id,actual_query=question,context_messages=context)
         else:
             response={"gpt_response":"Action queued successfully"}
 
         if res["isAction"]:
-            msg_id = str(uuid.uuid4())
+            # msg_id = str(uuid.uuid4())
             message=json.dumps({"user query":question,"response":response, "action":res["action"]})
             print(f"Sending message: {message}")
-            self.messageQueue.publish_message(message,msg_id)
+            self.messageQueue.publish_message(message,msg_id,session_id)
         print("RES",response)
 
         return {**response,"msg_id":msg_id}

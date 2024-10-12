@@ -31,8 +31,6 @@ class ContextDatabaseService:
         return self.db.sessions.update_one({"_id": session_id}, {"$push": {"context": new_context}})
     
     def create_knowledgebase_collection(self,name):
-        
-
         if self.kbCollection.count_documents({"name": name}) == 0:
             self.kbCollection.insert_one({
                 "name": name,

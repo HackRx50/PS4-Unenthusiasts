@@ -61,6 +61,14 @@ class ContextDatabaseService:
     def get_log_by_id(self, message_id):
         return self.logs_collection.find_one({"_id": message_id})
 
+    def update_session_context(self, session_id: str, message_id: str, combined_output: dict):
+    # Update the context array where msg_id matches message_id and set actionresponse
+        return self.db.sessions.update_one(
+            {"_id": session_id, "context.msg_id": message_id},
+            {"$set": {"context.$.actionresponse": combined_output}}
+        )
+
+
 
 class ActionExecuter:
     def __init__(self, chatbotName,num_workers):
@@ -73,18 +81,20 @@ class ActionExecuter:
     
 
     def on_message(self, ch, method, properties, body):
-        future = self.executor.submit(self.process_message, body,properties)
-        future.add_done_callback(lambda x:
-            print(f"Task completed: {x.result()}"))
-        
+        # future = self.executor.submit(self.process_message, body,properties)
+        # future.add_done_callback(lambda x:
+        #     print(f"Task completed: {x.result()}"))
         ch.basic_ack(delivery_tag=method.delivery_tag) 
+        self.process_message(body,properties)
+        
+        
 
     def process_message(self, body,properties):
         if isinstance(body, bytes):
             body = body.decode("utf-8")  # Decode from bytes to string
             body = json.loads(body)  
         reactquery = body["action"]
-        print(f"Received message: {reactquery}")
+        print(f"Received message: {reactquery} {type(reactquery)}")
 
         agent = initialize_agent(
             tools=self.tools,
@@ -100,6 +110,10 @@ class ActionExecuter:
         print("Full captured output:")
         print(combined_output)
         self.db_service.save_log(properties.message_id, combined_output)
+        session_id = properties.headers.get("session_id") if properties.headers else None
+
+        self.db_service.update_session_context(session_id, properties.message_id, combined_output)
+
 
         # response = agent.run(body)
         # print(f"Processed message: {response}")
