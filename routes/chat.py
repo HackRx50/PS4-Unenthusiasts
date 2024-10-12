@@ -42,7 +42,7 @@ def search_knowledge_base(request: QueryRequest,session_id: Optional[str] = Quer
     try:
         print(f"User {user_id} is querying the knowledge base.")
         # result, msg_id = chatbot.answer(request.query, session_id, request.document_id)
-        response_data = chatbot.answer(request.query, session_id, request.document_id)
+        response_data = chatbot.answer(request.query, session_id, request.document_id,user_id)
         # result = response_data.get("result")
         # msg_id = response_data.get("msg_id")
         return response_data
