@@ -33,8 +33,10 @@ async def upload_document(file: UploadFile = File(...)):
     try:
         # print(f"User {user_id} is querying the knowledge base.")
         result = await document_service.upload_document(file)
+        print("File", file)
         return "DONE"
     except Exception as e:
+        print("Error", e)
         raise HTTPException(status_code=400, detail=f"An error occurred: {str(e)}")
 
 @chat_router.post("/chat")
@@ -62,5 +64,12 @@ async def get_log_status(message_id: str):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-
-
+@chat_router.get("/get_files")
+def get_files():
+    """Retrieve all documents from the knowledge base."""
+    try:
+        documents = knowledgebase_service.get_documents()
+        return {"documents": documents}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred: {str(e)}")

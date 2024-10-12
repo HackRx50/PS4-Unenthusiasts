@@ -57,4 +57,11 @@ class ContextDatabaseService:
             else:
                 print(f"Document name '{document_name}' already exists in the knowledgebase.")
 
-
+    def get_all_documents(self):
+        doc = self.kbCollection.find_one({})  # Use await here
+        if doc:
+            return {
+                "document_names": doc.get("documents", [])
+            }
+        else:
+            return []
