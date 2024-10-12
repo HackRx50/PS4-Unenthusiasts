@@ -19,6 +19,7 @@ class Chatbot:
         if session_id is not None:
             session_data = self.database.find_session_by_id(session_id)
             context_messages = session_data.get("context", [])
+        
             
         system_prompt="""
              Identify where the question of the user is query or action
