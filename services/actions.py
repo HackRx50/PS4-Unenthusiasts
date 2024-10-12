@@ -80,8 +80,11 @@ class ActionExecuter:
         ch.basic_ack(delivery_tag=method.delivery_tag) 
 
     def process_message(self, body,properties):
-        print(f"Received message: {body}")
-
+        if isinstance(body, bytes):
+            body = body.decode("utf-8")  # Decode from bytes to string
+            body = json.loads(body)  
+        reactquery = body["action"]
+        print(f"Received message: {reactquery}")
 
         agent = initialize_agent(
             tools=self.tools,
@@ -90,7 +93,7 @@ class ActionExecuter:
             agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
         )
         captured_output = []
-        for chunk in agent.stream(body):
+        for chunk in agent.stream(reactquery):
             captured_output.append(chunk)
         combined_output = ''.join([str(chunk) for chunk in captured_output])
 

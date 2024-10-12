@@ -49,6 +49,7 @@ class DocumentProcessor:
     async def upload_document(self,file:UploadFile):
         try:
             docuemntId=str(uuid.uuid4())
+            print(docuemntId)
             # print(message,"DONE")
             file_extension = f".{file.filename.split('.')[-1]}"
             temp_file_path=None

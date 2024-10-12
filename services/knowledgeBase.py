@@ -160,9 +160,6 @@ class KnowledgeBaseService:
         
 
     def query_knowledge_base(self, query: str, session_id: str = None,document_id: str = None,actual_query:str=None,context_messages:List[str]=None):
-        print("HELLO")
-        if not session_id or not self.database.find_session_by_id(session_id):
-            session_id = self.database.create_session()
         # system_prompt = (
         #     "You are a helpful AI assistant that answers questions based on the given information. You have to provide short and crisp answers and only provide how much information is needed.If you don't get any relevant answer from the infromation then reply Sorry,cannot find the response in the knowledge base"
         # )
@@ -180,11 +177,11 @@ class KnowledgeBaseService:
               - Express uncertainty if you're not sure about an answer
 '''
         )
-        startT=time.time();
+        # startT=time.time()
         information = self.search_knowledge_base(query,document_id=document_id)
-        endT=time.time();
-        dur=endT-startT
-        print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
+        # endT=time.time()
+        # dur=endT-startT
+        # print(f"Time taken to fetch from knowledge base: {dur:.4f} seconds")
 
         user_prompt = f"Given the query: '{query}', and the following relevant information:\n{information}\nProvide a detailed answer based on the above information."
         print("HELLO1")
@@ -193,14 +190,11 @@ class KnowledgeBaseService:
 
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
-       
-
 
         self.database.update_session_context(session_id, {
             "query": actual_query,
             "gpt_response": gpt_response,
         })
-        print("HELLO2")
 
         return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):
@@ -276,7 +270,6 @@ class KnowledgeBaseService:
 
 
 
-
         
             
 
@@ -340,7 +333,7 @@ class KnowledgeBaseService:
         if all_points:
             self.vector_db.upsert(all_points)
             self.semantic_cache = SemanticCacheService("cache", float(0.35))
-            self.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
+            self.database.add_document_name(filename,document_id=document_id,kb_name=self.collection_name)
             return {"status": "success", "message": f"{len(all_points)} chunks added to knowledge base.","document_id": document_id}
         else:
             return {"status": "error", "message": "No data extracted from the document."}

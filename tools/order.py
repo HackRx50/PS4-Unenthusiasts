@@ -1,11 +1,15 @@
 import requests
 import uuid
 
-def order( productId: str, productName: str, productPrice: int, action: str):
+def order( productId: str, productName: str, productPrice: float, action: str):
+    if not productId or not productName or not productPrice or not action:
+        return "Insufficient data. All parameters (productId, productName, productPrice, action) are required."
+
     mobile="12345"
     url = "https://hackrx-ps4.vercel.app/order"
     
-    _id = str(uuid.uuid4())
+    _id =str(uuid.uuid4())
+    # _id ="orderid"+str(uuid.uuid4())
 
     headers = {
         "team": "unenthusiasts",      
@@ -43,9 +47,9 @@ def get_orders():
     url = "https://hackrx-ps4.vercel.app/orders"
     
     headers = {
-        "team": "unenthusiats",
+        "team": "unenthusiasts",
         "mobile": mobile,
-        "x-team": "unenthusiats"
+        "x-team": "unenthusiasts"
     }
 
     try:
@@ -68,9 +72,9 @@ def get_order_status(order_id: str):
     url = f"https://hackrx-ps4.vercel.app/order-status?orderId{order_id}&mobile={mobile}"
     
     headers = {
-        "team": "unenthusiats",
+        "team": "unenthusiasts",
         "mobile": mobile,
-        "x-team": "unenthusiats"
+        "x-team": "unenthusiasts"
     }
 
     try:
@@ -91,9 +95,9 @@ def generate_leads():
     mobile="123"
     url = "https://hackrx-ps4.vercel.app/generate-lead"
     headers = {
-        "team": "unenthusiats",
+        "team": "unenthusiasts",
         "mobile": mobile,
-        "x-team": "unenthusiats"
+        "x-team": "unenthusiasts"
     }
     payload={
         "mobile":mobile
@@ -115,9 +119,9 @@ def eligibility_check():
     mobile="123"
     url = "https://hackrx-ps4.vercel.app/eligibility-check"
     headers = {
-        "team": "unenthusiats",
+        "team": "unenthusiasts",
         "mobile": mobile,
-        "x-team": "unenthusiats"
+        "x-team": "unenthusiasts"
     }
     payload={
         "mobile":mobile
@@ -141,9 +145,9 @@ def health_check():
     mobile="123"
     url = "https://hackrx-ps4.vercel.app/health-check"
     headers = {
-        "team": "unenthusiats",
+        "team": "unenthusiasts",
         "mobile": mobile,
-        "x-team": "unenthusiats"
+        "x-team": "unenthusiasts"
     }
     try:
         response = requests.get(url,headers=headers)
