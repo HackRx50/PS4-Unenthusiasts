@@ -19,11 +19,10 @@ class ContextDatabaseService:
     def insert_session(self, session_data: dict):
         return self.db.sessions.insert_one(session_data)
 
-    def create_session(self):
+    def create_session(self,user_id):
         session_id = str(uuid.uuid4())
-        self.insert_session({"_id": session_id, "context": []})
+        self.insert_session({"_id": session_id, "context": [],"userid":user_id})
         return session_id
-
 
     def find_session_by_id(self, session_id: str):
         return self.db.sessions.find_one({"_id": session_id})
@@ -37,7 +36,7 @@ class ContextDatabaseService:
         if self.kbCollection.count_documents({"name": name}) == 0:
             self.kbCollection.insert_one({
                 "name": name,
-                "document_names": []  # Array to store document names
+                "document_names": [] 
             })
             print("Initialized 'knowledgebase' document in 'knowledgebase' collection.")
 
