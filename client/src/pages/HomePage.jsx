@@ -6,12 +6,12 @@ import axios from "axios";
 const HomePage = ({ setLoading }) => {
   const { user } = useUser();
   const [chatData, setChatData] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(0);
+  const [activeChatId, setActiveChatId] = useState(null);
   const [currentChatData, setCurrentChatData] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
   const getChatData = async () => {
-    const setLoading = true;
+    setLoading(true);
     const url = "http://127.0.0.1:8000/get_chats";
     await axios
       .get(url, {
@@ -87,6 +87,7 @@ const HomePage = ({ setLoading }) => {
       <ChatSection
         setLoading={setLoading}
         getChatData={getChatData}
+        setActiveChatId={setActiveChatId}
         activeChatId={activeChatId}
         currentChatData={currentChatData}
         darkMode={darkMode}

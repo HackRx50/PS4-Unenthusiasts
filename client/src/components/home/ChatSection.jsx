@@ -49,6 +49,7 @@ import toast, { Toaster } from "react-hot-toast";
 const ChatSection = ({
   setLoading,
   getChatData,
+  setActiveChatId,
   activeChatId,
   currentChatData,
   darkMode,
@@ -189,23 +190,42 @@ const ChatSection = ({
       body.document_id = filteredFiles;
     }
     try {
-      const response = await axios.post(url, body, {
-        params: {
-          session_id: activeChatId,
-        },
-        headers: {
-          Authorization: `Bearer ${user?.access_token}`,
-        },
-      });
-      toast("Message Sent", {
-        style: {
-          border: "1px solid #10B981",
-          padding: "16px",
-          color: "#10B981",
-        },
-      });
-      setMessage("");
-      getChatData();
+      if (!activeChatId) {
+        const response = await axios.post(url, body, {
+          headers: {
+            Authorization: `Bearer ${user?.access_token}`,
+          },
+        });
+        setActiveChatId(response.data.session_id);
+        toast("Message Sent", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+        setMessage("");
+        getChatData();
+      } else {
+        const response = await axios.post(url, body, {
+          params: {
+            session_id: activeChatId,
+          },
+          headers: {
+            Authorization: `Bearer ${user?.access_token}`,
+          },
+        });
+        setActiveChatId(response.data.session_id);
+        toast("Message Sent", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+        setMessage("");
+        getChatData();
+      }
     } catch (error) {
       console.error("Error:", error);
       toast("Error", {
