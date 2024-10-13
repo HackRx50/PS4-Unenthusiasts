@@ -34,9 +34,10 @@ def start_fastapi():
 def start_action_executer():
     chatbot_name = "chatbot"
     num_workers = 5  
-    action_executer = ActionExecuter(chatbot_name, num_workers)
+    action_executer = ActionExecuter()
+    # action_executer = ActionExecuter(chatbot_name, num_workers)
     
-    action_executer.start_consuming() 
+    # action_executer.start_consuming() 
 
 
 

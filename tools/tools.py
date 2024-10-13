@@ -67,18 +67,27 @@ class get_orderArgs(BaseModel):
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
-    description='Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function. Now check if the user needs anything else like placing order or get order status if yes then perform that action',
-    args_schema=get_orderArgs
+    description='''Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function . Now check if the user needs anything else like placing order or get order status if yes then perform that action. return the output in this schema.       "team": "string",
+      "id": "string",
+      "mobile": "string",
+      "productId": "string",
+      "productName": "string",
+      "productPrice": 0,
+      "status": "string",
+      "timestamp": "2024-10-13T03:23:36.990Z"''',
+      args_schema=get_orderArgs
 )
 
 class orderStatusArgs(BaseModel):
     order_id: str
     mobile: str
-
+    
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
-    description='Get the status of the order.DONT CALL THIS UNLESS ASKED FOR IN THE question. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid',
+    description='''
+    ***NOTE** order_id is uuid
+    Get the status of the order.DONT CALL THIS UNLESS ASKED FOR IN THE question. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid''',
 )
 
 generate_leads_tool = StructuredTool.from_function(

@@ -15,7 +15,7 @@ MONGO_URI = env.mongo_uri
 MONGO_DB_NAME=env.mongo_db_name
 from langchain_openai import ChatOpenAI
 OPENAI_API_KEY = env.openai_api_key
-print(OPENAI_API_KEY)
+# print(OPENAI_API_KEY)
 
 template = '''Answer the following questions as best you can. You have access to the following tools:
 
@@ -80,7 +80,7 @@ class ActionExecuter:
 
     def sync_executor(self, reactquery,userId):
         try:
-            print("react query:", reactquery)
+            # print("react query:", reactquery)
             agent = initialize_agent(
                 tools=self.tools,
                 llm=self.llm,

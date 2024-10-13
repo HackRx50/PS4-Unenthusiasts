@@ -63,7 +63,7 @@ class Chatbot:
         if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated properly.
         if the question is neither query nor action then write its response in "extra" which could be you being a friendly bot, dont answer any queries that are out of context here, just say ask related to the documents uploaded or ask me to perform actions. otherwise leave it blank
         if  the action is for creating an order and it doesnt provide a name for document add {"error:<error>}
-        if  the action is for requesting to check status an order and it doesnt provide which order add {"error:<error>}
+        if  the action is for requesting to check status an order and it doesnt specify which order {"error:<error>}
 
         Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context. DONT WRITE "```" in the output
         """
