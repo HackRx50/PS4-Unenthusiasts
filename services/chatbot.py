@@ -140,7 +140,8 @@ class Chatbot:
 
         self.database.update_session_context(session_id, {
             "query": question,
-            "gpt_response": final_response
+            "gpt_response": final_response,
+            "isAction":res["isAction"],       
         })
 
         return {
