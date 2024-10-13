@@ -39,6 +39,8 @@ class KnowledgeBaseService:
        
         # self.create_collection()
         self.database.create_knowledgebase_collection(collection_name)
+    
+    
         
 
     # def search_knowledge_base(self, query,document_id):
