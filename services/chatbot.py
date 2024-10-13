@@ -91,29 +91,65 @@ class Chatbot:
 
         if res["isAction"]:
             # msg_id = str(uuid.uuid4())
-            message=f"""This is user query: {res["action"]}"""
+            message = f"""This is user query: {res["action"]}"""
+            
             if response is not None and res["isQuery"]:
-                message+=f"""This is the previous response context : {response["gpt_response"]}"""
-      
+                message += f"""This is the previous response context: {response["gpt_response"]}"""
+            
             print(f"Sending message: {message}")
-            actionRes=self.actionExecutor.sync_executor(message)
-            response["action_response"]=actionRes
-        print("RESPONSE",response)
+            
+            actionRes = self.actionExecutor.sync_executor(message)
+            
+            # Handle the case where actionRes is None or empty
+            if actionRes:
+                response["action_response"] = actionRes
+            else:
+                response["action_response"] = "No action response received."  # Set a default message or handle the case accordingly
+            
+        print("RESPONSE", response)
 
         self.database.update_session_context(session_id, {
             "query": question,
             "gpt_response": json.dumps({
-                "query_response": response["gpt_response"],
-                "action_response": response["action_response"]
+                "query_response": response.get("gpt_response", "No query response available"),
+                "action_response": response.get("action_response", "No action response available")
             }),
         })
 
-        return {"gpt_response": json.dumps({
-                "query_response": response["gpt_response"],
-                "action_response": response["action_response"]
+        return {
+            "gpt_response": json.dumps({
+                "query_response": response.get("gpt_response", "No query response available"),
+                "action_response": response.get("action_response", "No action response available")
             }),
             "session_id": session_id,
-            }
+        }
+
+
+        # if res["isAction"]:
+        #     # msg_id = str(uuid.uuid4())
+        #     message=f"""This is user query: {res["action"]}"""
+        #     if response is not None and res["isQuery"]:
+        #         message+=f"""This is the previous response context : {response["gpt_response"]}"""
+      
+        #     print(f"Sending message: {message}")
+        #     actionRes=self.actionExecutor.sync_executor(message)
+        #     response["action_response"]=actionRes
+        # print("RESPONSE",response)
+
+        # self.database.update_session_context(session_id, {
+        #     "query": question,
+        #     "gpt_response": json.dumps({
+        #         "query_response": response["gpt_response"],
+        #         "action_response": response["action_response"]
+        #     }),
+        # })
+
+        # return {"gpt_response": json.dumps({
+        #         "query_response": response["gpt_response"],
+        #         "action_response": response["action_response"]
+        #     }),
+        #     "session_id": session_id,
+        #     }
 
 
 # "suggested":array of strings,
