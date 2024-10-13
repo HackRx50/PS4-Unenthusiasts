@@ -90,13 +90,13 @@ class KnowledgeBaseService:
 
     # Check if the query is present in the cache
         startcache=time.time()
-        cache_results = self.semantic_cache.search_cache(query)
-        if cache_results is not None:
-            print("cache hit")
-            return cache_results
-        endcache=time.time()
-        durationcache=endcache-startcache
-        print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
+        # cache_results = self.semantic_cache.search_cache(query)
+        # if cache_results is not None:
+        #     print("cache hit")
+        #     return cache_results
+        # endcache=time.time()
+        # durationcache=endcache-startcache
+        # print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
 
         query_embedding = self._query_embedding(query)
         start_time = time.time()
@@ -124,7 +124,7 @@ class KnowledgeBaseService:
         # Process the search results
         results = []
         for hit in search_result["matches"]:
-            metadata = hit.get("metadata", {})  # Safely get metadata, or use an empty dictionary if None
+            metadata = hit.get("metadata", {})  
             text = metadata.get("text", "No text available")
             filename = metadata.get("filename", "Unknown file")
             page_number = metadata.get("page_number", "Unknown page")
@@ -152,7 +152,7 @@ class KnowledgeBaseService:
         duration_util=util_end-util_start
         print(f"Time taken to fetch from utils: {duration_util:.4f} seconds")
         # Add the query to the cache for future use
-        self.semantic_cache.add_to_cache(query, information)
+        # self.semantic_cache.add_to_cache(query, information)
 
         return information
 
@@ -192,11 +192,7 @@ class KnowledgeBaseService:
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
 
-        self.database.update_session_context(session_id, {
-            "query": actual_query,
-            "gpt_response": gpt_response,
-            "msg_id":msg_id
-        })
+      
 
         return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):

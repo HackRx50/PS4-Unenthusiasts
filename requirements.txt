@@ -21,3 +21,4 @@ pika
 pyjwt
 boto3
 botocore
+langchain_openai

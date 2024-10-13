@@ -4,7 +4,7 @@ from qdrant_client import QdrantClient
 import uuid
 
 class SemanticCacheService:
-    def __init__(self, cache_collection_name: str, threshold: float = 0.35):
+    def __init__(self, cache_collection_name: str, threshold: float = 0.70):
         self.encoder = get_embedding_function()
         self.cache_client = self._create_in_memory_cache_client()  
         self.cache_collection_name = cache_collection_name
