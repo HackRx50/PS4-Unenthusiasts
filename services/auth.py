@@ -47,7 +47,7 @@ class Auth:
             payload, JWT_REFRESH_SECRET, algorithm='HS256')
         return refresh_token
 
-    def register_user(self, username, email, password):
+    def register_user(self, username, email, password, phone):
         if self.users_collection.find_one({'email': email}):
             return {"message": "User already exists", "status": False}
 
@@ -55,6 +55,7 @@ class Auth:
         new_user = {
             'username': username,
             'email': email,
+            'phone': phone,
             'password': hashed_password,
             'tier': 'basic',  # Add 'tier' field with default value 'basic'
             'api_calls_today': 0,

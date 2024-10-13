@@ -437,7 +437,10 @@ class KnowledgeBaseService:
     def _query_embedding(self, query):
         return get_embedding_function().embed_query(query)
 
-
-    
-
-
+    def get_documents(self):
+        try:
+            documents = self.database.get_all_documents()
+            print("Documents", documents)
+            return documents
+        except Exception as e:
+            raise Exception(f"Error fetching documents: {str(e)}")

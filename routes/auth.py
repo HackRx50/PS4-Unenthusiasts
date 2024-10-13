@@ -20,12 +20,13 @@ async def register(request: RegisterRequest):
     username = request.username
     email = request.email
     password = request.password
+    phone = request.phone
 
     # Basic validation (Pydantic ensures required fields are provided)
-    if not username or not email or not password:
+    if not username or not email or not password or not phone:
         raise HTTPException(status_code=400, detail="All fields are required")
     # Call the registration logic
-    result = auth.register_user(username, email, password)
+    result = auth.register_user(username, email, password, phone)
     return result
 
 @auth_router.post('/login')
