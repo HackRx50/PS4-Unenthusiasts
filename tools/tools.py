@@ -67,7 +67,7 @@ class get_orderArgs(BaseModel):
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
-    description='Gets all the orders from the store for a user and returns it . Now check if the user needs anything else like placing order or get order status if yes then perform that action',
+    description='Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function. Now check if the user needs anything else like placing order or get order status if yes then perform that action',
     args_schema=get_orderArgs
 )
 
@@ -84,18 +84,18 @@ order_status_tool = StructuredTool.from_function(
 generate_leads_tool = StructuredTool.from_function(
    name="GenerateLeads",
    func=generate_leads,
-   description='Generate the leads',
+   description='Generate the leads and return the response which is being generated after execution of the function.',
 )
 
 eligibility_check_tool = StructuredTool.from_function(
    name="EligibilityCheck",
    func=eligibility_check,
-   description='Check the eligibility',
+   description='Check the eligibility and return True or False after execution of the function',
 )
 health_check_tool = StructuredTool.from_function(
    name="HealthCheck",
    func=eligibility_check,
-   description='Check the health of the server',
+   description='Check the health of the server and return True or False after execution of the function',
 )
 
 
