@@ -136,7 +136,8 @@ class Chatbot:
         elif res["isAction"]:
             final_response=response["action_response"]
         else :
-            final_response="Hello, please ask either queries based on your uploaded documents or ask me to perform one of the following actions: place order, get orders, get order status"
+            # final_response="Hello, please ask either queries based on your uploaded documents or ask me to perform one of the following actions: place order, get orders, get order status"
+            final_response=res["extra"]
 
         self.database.update_session_context(session_id, {
             "query": question,

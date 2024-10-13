@@ -83,6 +83,7 @@ const ChatSection = ({
         },
       })
       .then((response) => {
+        setAllFiles(response?.data?.documents?.document_names);
         toast("Files fetched successfully", {
           style: {
             border: "1px solid #10B981",
@@ -103,8 +104,6 @@ const ChatSection = ({
       .finally(() => {
         setLoading(false);
       });
-
-    setAllFiles(response?.data?.documents?.document_names);
   };
 
   useEffect(() => {
