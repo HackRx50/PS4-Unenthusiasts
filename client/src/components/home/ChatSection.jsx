@@ -91,6 +91,7 @@ const ChatSection = ({
         //   },
         // });
         console.log("Files:", response.data.documents.document_names);
+        setAllFiles(response?.data?.documents?.document_names);
       })
       .catch((error) => {
         toast("Error", {
@@ -104,8 +105,6 @@ const ChatSection = ({
       .finally(() => {
         setLoading(false);
       });
-
-    setAllFiles(response?.data?.documents?.document_names);
   };
 
   useEffect(() => {
@@ -186,10 +185,10 @@ const ChatSection = ({
     const url = "http://localhost:8000/chat";
     const body = {
       query: message,
-      user_id: user?.userid,
     };
+    let onlyFileIds = filteredFiles.map((file) => file.id);
     if (filteredFiles.length > 0) {
-      body.document_id = filteredFiles;
+      body.document_id = onlyFileIds;
     }
     try {
       if (!activeChatId) {
@@ -241,6 +240,27 @@ const ChatSection = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    window.SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new window.SpeechRecognition();
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = "en-US";
+  }, []);
+
+  const startListening = () => {
+    recognitionRef.current.start();
+    recognitionRef.current.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0])
+        .map((result) => result.transcript)
+        .join("");
+      setMessage(transcript);
+    };
   };
 
   return (
@@ -429,7 +449,10 @@ const ChatSection = ({
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-              <div className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-300 hover:text-gray-600 cursor-pointer">
+              <div
+                className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-300 hover:text-gray-600 cursor-pointer"
+                onClick={startListening}
+              >
                 <IoIosMic className="text-lg" />
               </div>
             </div>
