@@ -11,7 +11,8 @@ class KnowledgeBaseArgs(BaseModel):
     # document_id: str
 knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
-    func=kb.search_knowledge_base,
+    # func=kb.search_knowledge_base,
+    func=kb.search_knowledge_base_reranker,
     description='Search the knowledge base for relevant information based on a detailed query from the user. Use this tool when placing order. i have product details in my knowledge base use them. Search only for what the user has asked for. Use the correct schema which is only query string thats it.',
     args_schema=KnowledgeBaseArgs
 )
@@ -57,7 +58,7 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details.If productName is not specifies have it as None. STOP CHAIN AFTER THIS FUNCTION''',
+    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont receive any arguement field from knowledge base, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details.If productName is not specifies have it as None. STOP CHAIN AFTER THIS FUNCTION''',
     args_schema=orderArgs
 )
 
@@ -67,8 +68,16 @@ class get_orderArgs(BaseModel):
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
-    description='Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function. Now check if the user needs anything else like placing order or get order status if yes then perform that action',
-    args_schema=get_orderArgs
+    description='''Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function . Now check if the user needs anything else like placing order or get order status if yes then perform that action. return the output in this schema.      
+     "team": "string",
+      "id": "string",
+      "mobile": "string",
+      "productId": "string",
+      "productName": "string",
+      "productPrice": 0,
+      "status": "string",
+      "timestamp": "2024-10-13T03:23:36.990Z"''',
+      args_schema=get_orderArgs
 )
 
 class orderStatusArgs(BaseModel):
@@ -78,7 +87,9 @@ class orderStatusArgs(BaseModel):
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
-    description='Get the status of the order.DONT CALL THIS UNLESS ASKED FOR IN THE question. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid',
+    description='''
+    ***NOTE** order_id is uuid
+    Get the status of the order.DONT CALL THIS UNLESS ASKED FOR IN THE question. you need to get all orders for this and check which order id is to be used from there, use context and users question as well.in order schema, order id is given as "id". order id is a string. it is in the format uuid''',
 )
 
 generate_leads_tool = StructuredTool.from_function(

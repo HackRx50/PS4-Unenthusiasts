@@ -84,15 +84,14 @@ const ChatSection = ({
         },
       })
       .then((response) => {
-        // toast("Files fetched successfully", {
-        //   style: {
-        //     border: "1px solid #10B981",
-        //     padding: "16px",
-        //     color: "#10B981",
-        //   },
-        // });
-        console.log("Files:", response.data.documents.document_names);
         setAllFiles(response?.data?.documents?.document_names);
+        toast("Files fetched successfully", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
       })
       .catch((error) => {
         toast("Error", {
@@ -181,6 +180,7 @@ const ChatSection = ({
   const finalRef = useRef(null);
 
   const handleSubmit = async () => {
+    print("hi")
     setLoading(true);
     if (!message.trim()) return;
     const url = "http://localhost:8000/chat";
@@ -190,6 +190,7 @@ const ChatSection = ({
     let onlyFileIds = filteredFiles.map((file) => file.id);
     if (filteredFiles.length > 0) {
       body.document_id = onlyFileIds;
+      print(onlyFileIds)
     }
     try {
       if (!activeChatId) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 import { ChatSection, Sidebar } from "../components/home";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
@@ -100,4 +100,4 @@ const HomePage = ({ setLoading }) => {
   );
 };
 
-export default HomePage
+export default HomePage;
