@@ -104,7 +104,7 @@ const ChatSection = ({
         setLoading(false);
       });
 
-    setAllFiles(response.data.documents.document_names);
+    setAllFiles(response?.data?.documents?.document_names);
   };
 
   useEffect(() => {
@@ -185,6 +185,7 @@ const ChatSection = ({
     const url = "http://localhost:8000/chat";
     const body = {
       query: message,
+      user_id: user?.userid,
     };
     if (filteredFiles.length > 0) {
       body.document_id = filteredFiles;
@@ -196,6 +197,7 @@ const ChatSection = ({
             Authorization: `Bearer ${user?.access_token}`,
           },
         });
+        console.log("Response:", response);
         setActiveChatId(response.data.session_id);
         toast("Message Sent", {
           style: {
@@ -322,11 +324,11 @@ const ChatSection = ({
       >
         <div className="w-full h-full overflow-y-auto flex flex-col gap-2 items-start justify-center relative">
           <div className="w-[40rem] flex py-2 items-center justify-center">
-            {filteredFiles.length > 0 && (
+            {filteredFiles?.length > 0 && (
               <div className="text-xs w-20 text-gray-400">Using Files</div>
             )}
             <div className="py-1 w-full flex gap-2 overflow-x-auto">
-              {filteredFiles.map((file, index) => (
+              {filteredFiles?.map((file, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-2 px-2 py-1 bg-white text-sm rounded-2xl"
@@ -353,20 +355,16 @@ const ChatSection = ({
           <div className="flex w-full h-screen overflow-y-auto">
             {currentChatData ? (
               <div className="w-full py-2 h-fit gap-2 flex flex-col items-center justify-end">
-                {currentChatData.messages.map((message, index) => (
+                {currentChatData?.messages?.map((m, index) => (
                   <div
                     key={index}
                     className={`flex items-center gap-4 w-full ${
-                      message.sender === "user"
-                        ? "justify-end"
-                        : "justify-start"
+                      m.sender === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
                       className={`flex items-center gap-2 ${
-                        message.sender === "user"
-                          ? "flex-row-reverse"
-                          : "flex-row"
+                        m.sender === "user" ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
                       <div
@@ -374,45 +372,40 @@ const ChatSection = ({
                           darkMode ? "text-white" : "text-[#1B2559]"
                         } transition-all duration-200`}
                       >
-                        {message.sender === "user" ? <FaUser /> : <BsStars />}
+                        {m.sender === "user" ? <FaUser /> : <BsStars />}
                       </div>
                       <div
                         className={`text-sm transition-all duration-200 rounded-2xl px-4 py-2 ${
-                          message.sender === "user"
+                          m.sender === "user"
                             ? "bg-[#1B2559] text-white"
                             : `text-[#1B2559] ${
                                 darkMode ? "bg-gray-100" : "bg-white"
                               }`
                         }`}
                       >
-                        {message.sender === "user" ? (
-                          message.content
+                        {m.sender === "user" ? (
+                          m.content
                         ) : (
-                          <div className="flex flex-col w-full">
+                          <div className="flex flex-col w-full mt-5">
                             <ReactMarkdown>
-                              {message.content.slice(
-                                0,
-                                message.content.lastIndexOf("(")
-                              )}
+                              {m.content.slice(0, m.content.lastIndexOf("("))}
                             </ReactMarkdown>
-                            <Highlight
-                              query={message.content.slice(
-                                message.content.lastIndexOf("(") + 1,
-                                message.content.lastIndexOf(")")
+                            <div className="flex flex-wrap w-full gap-2 items-center">
+                              {m.content.includes("(") &&
+                                m.content.includes(")") && (
+                                  <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
+                                    {m.content.slice(
+                                      m.content.lastIndexOf("(") + 1,
+                                      m.content.lastIndexOf(")")
+                                    )}
+                                  </div>
+                                )}
+                              {m.isAction !== null && m.isAction && (
+                                <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
+                                  Action Performed ✅
+                                </div>
                               )}
-                              styles={{
-                                px: "1",
-                                py: "1",
-                                bg: "orange.100",
-                                borderRadius: "10px",
-                                margin: "10px 0 0 0",
-                              }}
-                            >
-                              {message.content.slice(
-                                message.content.lastIndexOf("(") + 1,
-                                message.content.lastIndexOf(")")
-                              )}
-                            </Highlight>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -480,7 +473,7 @@ const ChatSection = ({
                 fontSize={14}
               />
               <div className="flex flex-col w-full h-full">
-                {searchedFiles.map((file, index) => (
+                {searchedFiles?.map((file, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between w-full gap-4 py-2"

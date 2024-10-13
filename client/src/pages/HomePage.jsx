@@ -37,19 +37,21 @@ const HomePage = ({ setLoading }) => {
               message_id: 2 * j,
               sender: "user",
               content: temp[i].context[j].query,
+              isAction: null,
             };
             messages.push(user);
             let assistant = {
               message_id: 2 * j + 1,
               sender: "assistant",
               content: temp[i].context[j].gpt_response,
+              isAction: temp[i].context[j].isAction,
             };
             messages.push(assistant);
           }
           chat["messages"] = messages;
           if (chat["messages"].length > 0) data.push(chat);
         }
-
+        console.log("Data", data);
         setChatData(data);
       })
       .catch((error) => {
