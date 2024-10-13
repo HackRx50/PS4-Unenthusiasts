@@ -11,7 +11,8 @@ class KnowledgeBaseArgs(BaseModel):
     # document_id: str
 knowledge_base_tool = StructuredTool.from_function(
     name="SearchKnowledgeBase",
-    func=kb.search_knowledge_base,
+    # func=kb.search_knowledge_base,
+    func=kb.search_knowledge_base_reranker,
     description='Search the knowledge base for relevant information based on a detailed query from the user. Use this tool when placing order. i have product details in my knowledge base use them. Search only for what the user has asked for. Use the correct schema which is only query string thats it.',
     args_schema=KnowledgeBaseArgs
 )
@@ -67,7 +68,8 @@ class get_orderArgs(BaseModel):
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
-    description='''Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function . Now check if the user needs anything else like placing order or get order status if yes then perform that action. return the output in this schema.       "team": "string",
+    description='''Gets all the orders from the store for a user and returns it in detail including all the fields that are being returned upon successful execution of the function . Now check if the user needs anything else like placing order or get order status if yes then perform that action. return the output in this schema.      
+     "team": "string",
       "id": "string",
       "mobile": "string",
       "productId": "string",
@@ -81,7 +83,7 @@ get_order_tool = StructuredTool.from_function(
 class orderStatusArgs(BaseModel):
     order_id: str
     mobile: str
-    
+
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",
    func=get_order_status,
