@@ -22,3 +22,5 @@ pyjwt
 boto3
 botocore
 langchain_openai
+bcrypt
+cohere
