@@ -52,6 +52,7 @@ const HomePage = ({ setLoading }) => {
           if (chat["messages"].length > 0) data.push(chat);
         }
         console.log("Data", data);
+        data=data.reverse()
         setChatData(data);
       })
       .catch((error) => {
