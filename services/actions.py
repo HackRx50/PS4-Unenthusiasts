@@ -78,7 +78,7 @@ class ActionExecuter:
         self.llmservice=LLMService()
     
 
-    def sync_executor(self, reactquery):
+    def sync_executor(self, reactquery,userId):
         try:
             print("react query:", reactquery)
             agent = initialize_agent(
@@ -109,6 +109,7 @@ class ActionExecuter:
                             
             #     }
             # ])
+            reactquery+= f""" mobile = {userId}"""
             res=agent.run(reactquery)
             print(res)
             return res

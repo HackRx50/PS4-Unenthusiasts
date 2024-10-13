@@ -52,19 +52,28 @@ class orderArgs(BaseModel):
   productName: str
   productPrice:float
   action: str
+  mobile: str
 
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details. STOP CHAIN AFTER THIS FUNCTION''',
+    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details.If productName is not specifies have it as None. STOP CHAIN AFTER THIS FUNCTION''',
     args_schema=orderArgs
 )
+
+class get_orderArgs(BaseModel):
+  mobile: str
 
 get_order_tool = StructuredTool.from_function(
     name="GetOrders",
     func=get_orders,
     description='Gets all the orders from the store for a user and returns it . Now check if the user needs anything else like placing order or get order status if yes then perform that action',
+    args_schema=get_orderArgs
 )
+
+class orderStatusArgs(BaseModel):
+    order_id: str
+    mobile: str
 
 order_status_tool = StructuredTool.from_function(
    name="OrderStatus",

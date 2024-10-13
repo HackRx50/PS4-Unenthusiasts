@@ -49,6 +49,7 @@ class Chatbot:
             "query": String,
             "action": String,
             "extra":String
+            error:String
         }
         Instructions:
         1. **isQuery**: true if the user input is a query, otherwise false.
@@ -60,6 +61,8 @@ class Chatbot:
 
         if the question doesnt fit properly in the above guidelines then you can say so. ensure proper guardrailing, dont give action if not stated properly.
         if the question is neither query nor action then write its response in "extra" which could be you being a friendly bot, dont answer any queries that are out of context here, just say ask related to the documents uploaded or ask me to perform actions. otherwise leave it blank
+        if  the action is for creating an order and it doesnt provide a name for document add {"error:<error>}
+        if  the action is for requesting to check status an order and it doesnt provide which order add {"error:<error>}
 
         Ensure the output follows the exact JSON format and is generated strictly based on the user’s input and context. DONT WRITE "```" in the output
         """
@@ -81,6 +84,15 @@ class Chatbot:
         print("actionisthis : ",res["action"])
 
         response = None
+        if res["error"]:
+            self.database.update_session_context(session_id, {
+            "query": question,
+            "gpt_response": res["error"],
+            })
+            return {"gpt_response": res["error"], "session_id": session_id}
+        
+            print("ERROR1: ",res["error"])
+            response = {"gpt_response":res["error"]}
         if res["isQuery"]:
             response = self.kb.query_knowledge_base(res["query"],msg_id,session_id,document_id,actual_query=question,context_messages=context)
         elif res["isAction"]:
@@ -98,7 +110,7 @@ class Chatbot:
             
             print(f"Sending message: {message}")
             
-            actionRes = self.actionExecutor.sync_executor(message)
+            actionRes = self.actionExecutor.sync_executor(message,user_id)
             
             # Handle the case where actionRes is None or empty
             if actionRes:
