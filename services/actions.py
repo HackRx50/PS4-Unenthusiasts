@@ -90,26 +90,26 @@ class ActionExecuter:
             )
             # response_stream = agent.stream(reactquery)
             captured_output2 = []
-            for chunk in agent.stream(reactquery):
-                # newstr=str(chunk)
-                print(chunk)
-                captured_output2.append(str(chunk))
-            combined_output = ''.join([str(chunk) for chunk in captured_output2])
+            # for chunk in agent.stream(reactquery):
+            #     # newstr=str(chunk)
+            #     print(chunk)
+            #     captured_output2.append(str(chunk))
+            # combined_output = ''.join([str(chunk) for chunk in captured_output2])
 
 
             # Generate a concise response using llmservice
-            res = self.llmservice.generate_response(messages=[
-                {
-                    "role": "user",
-                    "content": f"This is the user query: {reactquery}\n"
-                            f"This is the complete log of the agent executing the task for the query:\n"
-                            f"{combined_output}\n\n"
-                            "I want you to provide a concise response. "
-                            "**NOTE**: All data points should be included."
+            # res = self.llmservice.generate_response(messages=[
+            #     {
+            #         "role": "user",
+            #         "content": f"This is the user query: {reactquery}\n"
+            #                 f"This is the complete log of the agent executing the task for the query:\n"
+            #                 f"{combined_output}\n\n"
+            #                 "I want you to provide a concise response. "
+            #                 "**NOTE**: All data points should be included."
                             
-                }
-            ])
-            # res="GN"
+            #     }
+            # ])
+            res=agent.run(reactquery)
             print(res)
             return res
 
