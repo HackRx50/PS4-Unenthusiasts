@@ -87,7 +87,7 @@ const AuthPage = ({ setLoading }) => {
         >
           <Image
             objectFit="fit"
-            h={"24rem"}
+            h={"27rem"}
             src="https://static.vecteezy.com/system/resources/previews/022/729/745/original/smart-chat-bot-with-artificial-intelligence-technology-free-vector.jpg"
             alt="Caffe Latte"
           />

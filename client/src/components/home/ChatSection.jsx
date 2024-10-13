@@ -387,11 +387,9 @@ const ChatSection = ({
                           m.content
                         ) : (
                           <div className="flex flex-col w-full mt-5">
-                            <ReactMarkdown>
-                              {m.content.slice(0, m.content.lastIndexOf("("))}
-                            </ReactMarkdown>
+                            <ReactMarkdown>{m.content}</ReactMarkdown>
                             <div className="flex flex-wrap w-full gap-2 items-center">
-                              {m.content.includes("(") &&
+                              {/* {m.content.includes("(") &&
                                 m.content.includes(")") && (
                                   <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
                                     {m.content.slice(
@@ -399,7 +397,7 @@ const ChatSection = ({
                                       m.content.lastIndexOf(")")
                                     )}
                                   </div>
-                                )}
+                                )} */}
                               {m.isAction !== null && m.isAction && (
                                 <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
                                   Action Performed ✅
