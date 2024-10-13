@@ -145,6 +145,7 @@ class Chatbot:
 
         return {
             "gpt_response": final_response,
+            "isAction":res["isAction"],
             "session_id": session_id,
         }
 
