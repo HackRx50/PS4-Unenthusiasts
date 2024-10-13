@@ -53,7 +53,7 @@ class Chatbot:
         }
         Instructions:
         1. **isQuery**: true if the user input is a query, otherwise false.
-        2. **isAction**: true if the user input is an action request (e.g., creating, canceling, or checking an order), otherwise false.
+        2. **isAction**: true if the user input is an action request (e.g., creating, canceling, or checking an order,generating leads, checking eligibitlity and checking systems health), otherwise false.
         3. **query**: Formulate a detailed query that clearly represents what the user is asking. Combine the current input and relevant context to create this query, as it will be used to query a vector database for the knowledge base.
         4. **action**: action can only be place an order, cancel order, check order status, get order status). Formulate a detailed action that clearly represents what the user is asking. Combine the current input and relevant context to create this action query, as it will be used to query a vector database for the knowledge base.
         - If the action requires an order (e.g., getting order status or canceling an order), retrieve the list of the user's orders first, then determine the specific order based on context or user input.
@@ -95,8 +95,6 @@ class Chatbot:
             response = {"gpt_response":res["error"]}
         if res["isQuery"]:
             response = self.kb.query_knowledge_base(res["query"],msg_id,session_id,document_id,actual_query=question,context_messages=context)
-        elif res["isAction"]:
-            response={"gpt_response":"Action queued successfully"}
         else:
             # response={"gpt_response":"Hello, please ask either queries based on your uploaded documents or ask me to perform one of the following actions: place order, get orders, get order status"}
             response={"gpt_response":res["extra"]}
@@ -120,19 +118,32 @@ class Chatbot:
             
         print("RESPONSE", response)
 
+        final_response=None;
+        if res["isAction"] is True and res["isQuery"] is True :
+            final_response=self.llm.generate_response(messages=[
+                {
+                    "role": "user",
+                    "content": f"""This is the user query: {question}\n
+                            This is the both the query response and action response provided belo:\n
+                            query response : {response["gpt_response"]} , action response: {response["action_response"]} \n\n
+                            I want you to provide a concise human resadable response as a chatbot. 
+                            **NOTE**: All data points should be included."""
+                }
+            ])
+        elif(res["isQuery"]):
+            final_response=response["gpt_response"]
+        elif res["isAction"]:
+            final_response=response["action_response"]
+        else :
+            final_response="Hello, please ask either queries based on your uploaded documents or ask me to perform one of the following actions: place order, get orders, get order status"
+
         self.database.update_session_context(session_id, {
             "query": question,
-            "gpt_response": json.dumps({
-                "query_response": response.get("gpt_response", "No query response available"),
-                "action_response": response.get("action_response", "No action response available")
-            }),
+            "gpt_response": final_response
         })
 
         return {
-            "gpt_response": json.dumps({
-                "query_response": response.get("gpt_response", "No query response available"),
-                "action_response": response.get("action_response", "No action response available")
-            }),
+            "gpt_response": final_response,
             "session_id": session_id,
         }
 
