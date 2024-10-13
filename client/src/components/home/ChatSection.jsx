@@ -45,6 +45,7 @@ import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
 import ReactMarkdown from "react-markdown";
 import toast, { Toaster } from "react-hot-toast";
+import { IoIosVolumeHigh } from "react-icons/io";
 
 const ChatSection = ({
   setLoading,
@@ -263,6 +264,23 @@ const ChatSection = ({
     };
   };
 
+  const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = voices.find(
+      (voice) =>
+        voice.name.includes("Female") ||
+        voice.gender === "female" ||
+        voice.name.toLowerCase().includes("female") ||
+        voice.name.toLowerCase().includes("woman") ||
+        voice.voiceURI.toLowerCase().includes("female")
+    );
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       <div
@@ -407,8 +425,12 @@ const ChatSection = ({
                         {m.sender === "user" ? (
                           m.content
                         ) : (
-                          <div className="flex flex-col w-full mt-5">
+                          <div className="flex flex-col relative w-full mt-5">
                             <ReactMarkdown>{m.content}</ReactMarkdown>
+                            <IoIosVolumeHigh
+                              className="text-lg absolute top-0 right-0 z-[600]"
+                              onClick={() => speak(m.content)}
+                            />
                             <div className="flex flex-wrap w-full gap-2 items-center">
                               {/* {m.content.includes("(") &&
                                 m.content.includes(")") && (
