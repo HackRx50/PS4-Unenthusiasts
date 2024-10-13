@@ -83,13 +83,14 @@ const ChatSection = ({
         },
       })
       .then((response) => {
-        toast("Files fetched successfully", {
-          style: {
-            border: "1px solid #10B981",
-            padding: "16px",
-            color: "#10B981",
-          },
-        });
+        // toast("Files fetched successfully", {
+        //   style: {
+        //     border: "1px solid #10B981",
+        //     padding: "16px",
+        //     color: "#10B981",
+        //   },
+        // });
+        console.log("Files:", response.data.documents.document_names);
       })
       .catch((error) => {
         toast("Error", {
