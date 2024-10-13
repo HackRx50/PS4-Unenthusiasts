@@ -58,7 +58,7 @@ class orderArgs(BaseModel):
 order_tool = StructuredTool.from_function(
     name="Order",
     func=order,
-    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont have any of the arguements from schema, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details.If productName is not specifies have it as None. STOP CHAIN AFTER THIS FUNCTION''',
+    description='''Order or cancel a product from the store. Search details like id and price from knowledge base before doing this to get the proper values and then use them. if you dont receive any arguement field from knowledge base, use NONE. Do not assume the fields.Pay attention to the schema, use  productId: str productName: str productPrice:float action: str. ONLY CALL this function if you have sufficient details.If productName is not specifies have it as None. STOP CHAIN AFTER THIS FUNCTION''',
     args_schema=orderArgs
 )
 

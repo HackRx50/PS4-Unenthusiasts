@@ -179,6 +179,7 @@ const ChatSection = ({
   const finalRef = useRef(null);
 
   const handleSubmit = async () => {
+    print("hi")
     setLoading(true);
     if (!message.trim()) return;
     const url = "http://localhost:8000/chat";
@@ -188,6 +189,7 @@ const ChatSection = ({
     let onlyFileIds = filteredFiles.map((file) => file.id);
     if (filteredFiles.length > 0) {
       body.document_id = onlyFileIds;
+      print(onlyFileIds)
     }
     try {
       if (!activeChatId) {

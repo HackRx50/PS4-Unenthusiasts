@@ -42,20 +42,20 @@ class ContextDatabaseService:
             print("Initialized 'knowledgebase' document in 'knowledgebase' collection.")
 
     def add_document_name(self, document_name: str,document_id: str,kb_name:str):
-       doc = self.kbCollection.find_one({"document_name": kb_name})
-       if doc:
+        doc = self.kbCollection.find_one({"name": kb_name})
+        if doc:
             document_names = doc.get("documents",[])
             existing_entry = next((entry for entry in document_names if entry["name"] == document_name), None)
 
-            if not existing_entry:
-                document_names.append({"name": document_name, "id": document_id})
-                self.kbCollection.update_one(
-                {"document_name": kb_name},
-                {"$set": {"documents": document_names}}
-                )
-                print(f"Added document name '{document_name}' with ID '{document_id} to the knowledgebase.")
-            else:
-                print(f"Document name '{document_name}' already exists in the knowledgebase.")
+        if not existing_entry:
+            document_names.append({"name": document_name, "id": document_id})
+            self.kbCollection.update_one(
+            {"name": kb_name},
+            {"$set": {"documents": document_names}}
+            )
+            print(f"Added document name '{document_name}' with ID '{document_id} to the knowledgebase.")
+        else:
+            print(f"Document name '{document_name}' already exists in the knowledgebase.")
 
     def get_all_documents(self):
         doc = self.kbCollection.find_one({})  # Use await here
