@@ -428,7 +428,7 @@ const ChatSection = ({
                           <div className="flex flex-col relative w-full mt-5">
                             <ReactMarkdown>{m.content}</ReactMarkdown>
                             <IoIosVolumeHigh
-                              className="text-lg absolute top-0 right-0 z-[600]"
+                              className="text-lg absolute -top-5 right-0 z-[600]"
                               onClick={() => speak(m.content)}
                             />
                             <div className="flex flex-wrap w-full gap-2 items-center">
