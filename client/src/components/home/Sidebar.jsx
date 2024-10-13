@@ -111,25 +111,25 @@ const Sidebar = ({
           darkMode ? "text-white" : "text-[#1B2559]"
         }`}
       >
-        <div className="font-bold">UNENTHU</div>
-        <div className="">BOT</div>
+        <div className="font-bold">VECTOR</div>
+        <div className="">AI</div>
       </div>
       <div
         className={`w-full transition-all duration-200 h-[1px] ${
           darkMode ? "bg-white" : "bg-[#1B2559]"
         }`}
       />
+      <div className="w-full px-3">
+        <button
+          className="bg-[#1B2559] hover:bg-opacity-80 text-white flex items-center justify-center gap-3 rounded-2xl w-full py-3"
+          onClick={() => setActiveChatId(0)}
+        >
+          <IoIosAddCircleOutline className="text-xl" />
+          <div className="text-sm font-semibold">New Chat</div>
+        </button>
+      </div>
       <div className="flex items-center transition-all duration-200 flex-col py-4 gap-2 w-full h-full overflow-y-auto">
-        <div className="w-full px-3">
-          <button
-            className="bg-[#1B2559] hover:bg-opacity-80 text-white flex items-center justify-center gap-3 rounded-2xl w-full py-3"
-            onClick={() => setActiveChatId(0)}
-          >
-            <IoIosAddCircleOutline className="text-xl" />
-            <div className="text-sm font-semibold">New Chat</div>
-          </button>
-        </div>
-        {todayChats?.length > 0 && (
+        {/* {todayChats?.length > 0 && (
           <div
             className={`px-3 w-full transition-all duration-200 text-xs ${
               darkMode ? "text-white" : "text-[#1B2559]"
@@ -137,7 +137,7 @@ const Sidebar = ({
           >
             Today
           </div>
-        )}
+        )} */}
         {todayChats?.map((chat) => (
           <Cell
             key={chat.chat_id}
@@ -156,7 +156,7 @@ const Sidebar = ({
             }`}
           />
         )}
-        {otherChats?.length > 0 && (
+        {/* {otherChats?.length > 0 && (
           <div
             className={`px-3 w-full transition-all duration-200 text-xs ${
               darkMode ? "text-white" : "text-[#1B2559]"
@@ -164,7 +164,7 @@ const Sidebar = ({
           >
             Earlier
           </div>
-        )}
+        )} */}
         {otherChats?.map((chat) => (
           <Cell
             key={chat.chat_id}
@@ -177,7 +177,7 @@ const Sidebar = ({
           />
         ))}
       </div>
-      <div className="w-full h-96 px-4 pb-4 pt-9">
+      <div className="w-full h-96 px-4 pb-4">
         <div className="w-full flex flex-col items-center justify-center h-full bg-gradient-to-t from-[#4A25E1] to-[#937ee3] rounded-2xl relative">
           <div className="absolute -top-[1.5rem] left-0 w-full flex justify-center items-center">
             <div className="w-[3rem] h-[3rem] flex items-center justify-center rounded-full border-4 border-white bg-gradient-to-tr from-[#4A25E1] to-[#937ee3]">

@@ -7,7 +7,7 @@ import { Spinner } from "@chakra-ui/react";
 const App = () => {
   const [loading, setLoading] = useState(false);
   return (
-    <div className="h-screen w-screen bg-[#FDFDFD] flex items-center justify-center overflow-hidden">
+    <div className="h-screen font-jakartasans w-screen bg-[#FDFDFD] flex items-center justify-center overflow-hidden">
       <UserProvider>
         <Router>
           <Routes>

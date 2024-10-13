@@ -75,8 +75,8 @@ const AuthPage = ({ setLoading }) => {
     <div className="w-full h-full flex flex-col items-center justify-center">
       <div className="py-3 transition-all duration-200 px-8 w-full flex justify-center items-center z-[5000] bg-white">
         <div className="transition-all duration-200 uppercase text-xl flex items-center justify-center text-[#1B2559]">
-          <div className="font-bold">Unenthu</div>
-          <div className="">siasts</div>
+          <div className="font-bold">Vector</div>
+          <div className="">AI</div>
         </div>
       </div>
       <div className="w-full px-10 bg-gray-200 h-full flex items-center justify-center">
