@@ -111,8 +111,8 @@ const Sidebar = ({
           darkMode ? "text-white" : "text-[#1B2559]"
         }`}
       >
-        <div className="font-bold">UNENTHU</div>
-        <div className="">BOT</div>
+        <div className="font-bold">VECTOR</div>
+        <div className="">AI</div>
       </div>
       <div
         className={`w-full transition-all duration-200 h-[1px] ${
