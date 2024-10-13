@@ -20,7 +20,7 @@ const App = () => {
         </Router>
       </UserProvider>
       {loading && (
-        <div className="w-screen fixed top-0 left-0 z-[7500] flex items-center justify-center h-screen bg-black bg-opacity-10 backdrop-blur-sm">
+        <div className="w-screen fixed top-0 left-0 z-[300] flex items-center justify-center h-screen bg-black bg-opacity-10 backdrop-blur-sm">
           <Spinner
             thickness="4px"
             speed="0.65s"

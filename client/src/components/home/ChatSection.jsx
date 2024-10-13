@@ -284,7 +284,7 @@ const ChatSection = ({
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       <div
-        className={`py-3 transition-all duration-200 shadow-lg px-8 w-full flex justify-between items-center z-[250]
+        className={`py-3 transition-all duration-200 shadow-lg px-8 w-full flex justify-between items-center z-[450]
         ${darkMode ? "bg-gray-800 shadow-gray-950" : "bg-white shadow-gray-100"}
       `}
       >

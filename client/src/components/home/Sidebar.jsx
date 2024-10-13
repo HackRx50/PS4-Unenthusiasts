@@ -102,7 +102,7 @@ const Sidebar = ({
 
   return (
     <div
-      className={`w-80 h-screen z-[200] transition-all duration-200 flex flex-col items-center justify-center gap-3 shadow-lg ${
+      className={`w-80 h-screen z-[400] transition-all duration-200 flex flex-col items-center justify-center gap-3 shadow-lg ${
         darkMode ? "bg-gray-800 shadow-gray-950" : "bg-white shadow-gray-200"
       }`}
     >
