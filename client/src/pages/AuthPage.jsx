@@ -16,38 +16,58 @@ import {
   InputRightElement,
   CardFooter,
 } from "@chakra-ui/react";
-import { FaRegUser } from "react-icons/fa";
+import { FaPhoneAlt, FaRegUser } from "react-icons/fa";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { MdAlternateEmail } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"
+import axios from "axios";
 import { useUser } from "../context/UserContext";
+import toast, { Toaster } from "react-hot-toast";
 
-const AuthPage = () => {
+const AuthPage = ({ setLoading }) => {
   const { login } = useUser();
   const [showPassWord, setShowPassWord] = useState(false);
   const handleClickShowPassWord = () => setShowPassWord(!showPassWord);
   const [showRePassWord, setShowRePassWord] = useState(false);
   const handleClickShowRePassWord = () => setShowRePassWord(!showRePassWord);
-  const navigate = useNavigate()
-  const [activeTab, setactiveTab] = useState(1)
+  const navigate = useNavigate();
+  const [activeTab, setactiveTab] = useState(1);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
 
   const handleSubmit = async () => {
+    setLoading(true);
     const baseURL = "http://127.0.0.1:8000";
     const url = `${baseURL}/${activeTab === 0 ? "login" : "register"}`;
-    const data = activeTab === 0 ? { email, password } : { username, email, password };
+    const data =
+      activeTab === 0
+        ? { email, password }
+        : { username, email, password, phone };
 
     try {
       const response = await axios.post(url, data);
-      console.log(response.data);
-      login(response.data)
+      toast("Success", {
+        style: {
+          border: "1px solid #10B981",
+          padding: "16px",
+          color: "#10B981",
+        },
+      });
+      login(response.data);
       navigate("/home");
     } catch (error) {
-      console.error(error);
+      toast("Error", {
+        style: {
+          border: "1px solid #EF4444",
+          padding: "16px",
+          color: "#EF4444",
+        },
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,8 +75,8 @@ const AuthPage = () => {
     <div className="w-full h-full flex flex-col items-center justify-center">
       <div className="py-3 transition-all duration-200 px-8 w-full flex justify-center items-center z-[5000] bg-white">
         <div className="transition-all duration-200 uppercase text-xl flex items-center justify-center text-[#1B2559]">
-          <div className="font-bold">Unenthu</div>
-          <div className="">siasts</div>
+          <div className="font-bold">Vector</div>
+          <div className="">AI</div>
         </div>
       </div>
       <div className="w-full px-10 bg-gray-200 h-full flex items-center justify-center">
@@ -67,7 +87,7 @@ const AuthPage = () => {
         >
           <Image
             objectFit="fit"
-            h={"24rem"}
+            h={"27rem"}
             src="https://static.vecteezy.com/system/resources/previews/022/729/745/original/smart-chat-bot-with-artificial-intelligence-technology-free-vector.jpg"
             alt="Caffe Latte"
           />
@@ -139,6 +159,17 @@ const AuthPage = () => {
                           onChange={(e) => setEmail(e.target.value)}
                         />
                       </InputGroup>
+                      <InputGroup>
+                        <InputLeftElement>
+                          <FaPhoneAlt className="text-gray-400" />
+                        </InputLeftElement>
+                        <Input
+                          type="tel"
+                          placeholder="phone number"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                        />
+                      </InputGroup>
                       <InputGroup size="md">
                         <InputLeftElement pointerEvents="none">
                           <RiLockPasswordLine className="text-gray-400" />
@@ -173,6 +204,7 @@ const AuthPage = () => {
           </Stack>
         </Card>
       </div>
+      <Toaster />
     </div>
   );
 };

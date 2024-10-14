@@ -10,6 +10,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  Highlight,
   Input,
   Menu,
   MenuButton,
@@ -29,7 +30,7 @@ import { FaRegUserCircle } from "react-icons/fa";
 import { BiLogOut } from "react-icons/bi";
 import { IoMdPricetags } from "react-icons/io";
 import { IoSearch } from "react-icons/io5";
-import { MdCheckCircle, MdNightlight } from "react-icons/md";
+import { MdNightlight } from "react-icons/md";
 import { FaSun } from "react-icons/fa6";
 import NullImage from "../../assets/BgImageNull.svg";
 import { BsStars } from "react-icons/bs";
@@ -42,116 +43,21 @@ import { FaCircle } from "react-icons/fa";
 import { GrDocumentWord, GrDocumentPdf, GrDocumentPpt } from "react-icons/gr";
 import { AiOutlineFileUnknown } from "react-icons/ai";
 import FileUploadStage from "./FileUploadStage";
+import ReactMarkdown from "react-markdown";
+import toast, { Toaster } from "react-hot-toast";
+import { IoIosVolumeHigh } from "react-icons/io";
 
-const sampleFileNames = [
-  {
-    id: 1,
-    name: "Bajaj.pptx",
-  },
-  {
-    id: 2,
-    name: "Hero.docx",
-  },
-  {
-    id: 3,
-    name: "Honda.pdf",
-  },
-  {
-    id: 4,
-    name: "Yamaha.pdf",
-  },
-  {
-    id: 5,
-    name: "Suzuki.pdf",
-  },
-  {
-    id: 6,
-    name: "TVS.pdf",
-  },
-  {
-    id: 7,
-    name: "Royal Enfield.pdf",
-  },
-  {
-    id: 8,
-    name: "KTM.pdf",
-  },
-  {
-    id: 9,
-    name: "Mahindra.pdf",
-  },
-  {
-    id: 10,
-    name: "Vespa.pdf",
-  },
-  {
-    id: 11,
-    name: "Ducati.pdf",
-  },
-  {
-    id: 12,
-    name: "BMW.pdf",
-  },
-  {
-    id: 13,
-    name: "Harley-Davidson.pdf",
-  },
-  {
-    id: 14,
-    name: "Aprilia.pdf",
-  },
-  {
-    id: 15,
-    name: "Triumph.pdf",
-  },
-  {
-    id: 16,
-    name: "Kawasaki.pdf",
-  },
-  {
-    id: 17,
-    name: "MV Agusta.pdf",
-  },
-  {
-    id: 18,
-    name: "Benelli.pdf",
-  },
-  {
-    id: 19,
-    name: "Piaggio.pdf",
-  },
-  {
-    id: 20,
-    name: "Moto Guzzi.pdf",
-  },
-];
-
-const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
+const ChatSection = ({
+  setLoading,
+  getChatData,
+  setActiveChatId,
+  activeChatId,
+  currentChatData,
+  darkMode,
+  setDarkMode,
+}) => {
   const { user } = useUser();
   const [message, setMessage] = useState("");
-  const handleSubmit = async () => {
-    if (!message.trim()) return;
-
-    const url = "http://localhost:8000/chat";
-
-    try {
-      const response = await axios.post(
-        url,
-        {
-          query: message,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.access_token}`,
-          },
-        }
-      );
-      console.log("Response:", response.data);
-      setMessage("");
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
 
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
@@ -165,16 +71,60 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
   } = useDisclosure();
   const btnFilesViewRef = useRef();
 
+  const [allFiles, setAllFiles] = useState([]); //all files available
+
+  const getFiles = async () => {
+    setLoading(true);
+    const url = "http://localhost:8000/get_files";
+
+    const response = await axios
+      .get(url, {
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+        },
+      })
+      .then((response) => {
+        setAllFiles(response?.data?.documents?.document_names);
+        toast("Files fetched successfully", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+      })
+      .catch((error) => {
+        toast("Error", {
+          style: {
+            border: "1px solid #EF4444",
+            padding: "16px",
+            color: "#EF4444",
+          },
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getFiles();
+  }, []);
+
   const [filteredFiles, setFilteredFiles] = useState([]); //actual files to be used for query
   const [selectedFiles, setSelectedFiles] = useState([]); // files used for filtering in modal
   const [searchedFiles, setSearchedFiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    setSearchedFiles(allFiles);
+  }, [allFiles]);
+
+  useEffect(() => {
     if (searchQuery.trim() === "") {
-      setSearchedFiles(sampleFileNames);
+      setSearchedFiles(allFiles);
     } else {
-      const files = sampleFileNames.filter((file) =>
+      const files = allFiles.filter((file) =>
         file.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSearchedFiles(files);
@@ -184,16 +134,41 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
   const [fileUpload, setFileUpload] = useState(null);
 
   const handleFileUpload = async () => {
+    setLoading(true);
     let formData = new FormData();
     formData.append("file", fileUpload);
-
     const url = "http://localhost:8000/addToKnowledgeBase";
-
-    const response = await axios.post(url, formData, {
-      headers: {
-        Authorization: `Bearer ${user?.access_token}`,
-      },
-    });
+    const response = await axios
+      .post(url, formData, {
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+          "Content-Type": "application/pdf",
+          Accept: "application/json",
+        },
+      })
+      .then(() => {
+        toast("File uploaded successfully", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        toast("Error", {
+          style: {
+            border: "1px solid #EF4444",
+            padding: "16px",
+            color: "#EF4444",
+          },
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+        getFiles();
+      });
   };
 
   const {
@@ -204,10 +179,113 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
 
   const finalRef = useRef(null);
 
+  const handleSubmit = async () => {
+    print("hi")
+    setLoading(true);
+    if (!message.trim()) return;
+    const url = "http://localhost:8000/chat";
+    const body = {
+      query: message,
+    };
+    let onlyFileIds = filteredFiles.map((file) => file.id);
+    if (filteredFiles.length > 0) {
+      body.document_id = onlyFileIds;
+      print(onlyFileIds)
+    }
+    try {
+      if (!activeChatId) {
+        const response = await axios.post(url, body, {
+          headers: {
+            Authorization: `Bearer ${user?.access_token}`,
+          },
+        });
+        console.log("Response:", response);
+        setActiveChatId(response.data.session_id);
+        toast("Message Sent", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+        setMessage("");
+        getChatData();
+      } else {
+        const response = await axios.post(url, body, {
+          params: {
+            session_id: activeChatId,
+          },
+          headers: {
+            Authorization: `Bearer ${user?.access_token}`,
+          },
+        });
+        setActiveChatId(response.data.session_id);
+        toast("Message Sent", {
+          style: {
+            border: "1px solid #10B981",
+            padding: "16px",
+            color: "#10B981",
+          },
+        });
+        setMessage("");
+        getChatData();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast("Error", {
+        style: {
+          border: "1px solid #EF4444",
+          padding: "16px",
+          color: "#EF4444",
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    window.SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new window.SpeechRecognition();
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = "en-US";
+  }, []);
+
+  const startListening = () => {
+    recognitionRef.current.start();
+    recognitionRef.current.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0])
+        .map((result) => result.transcript)
+        .join("");
+      setMessage(transcript);
+    };
+  };
+
+  const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = voices.find(
+      (voice) =>
+        voice.name.includes("Female") ||
+        voice.gender === "female" ||
+        voice.name.toLowerCase().includes("female") ||
+        voice.name.toLowerCase().includes("woman") ||
+        voice.voiceURI.toLowerCase().includes("female")
+    );
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       <div
-        className={`py-3 transition-all duration-200 shadow-lg px-8 w-full flex justify-between items-center z-[250]
+        className={`py-3 transition-all duration-200 shadow-lg px-8 w-full flex justify-between items-center z-[450]
         ${darkMode ? "bg-gray-800 shadow-gray-950" : "bg-white shadow-gray-100"}
       `}
       >
@@ -264,7 +342,12 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                   <div className="">Billing</div>
                 </div>
               </MenuItem>
-              <MenuItem>
+              <MenuItem
+                onClick={() => {
+                  localStorage.removeItem("user");
+                  window.location.href = "/";
+                }}
+              >
                 <div className="flex items-center justify-center gap-2">
                   <BiLogOut />
                   <div className="">Logout</div>
@@ -275,23 +358,23 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
         </div>
       </div>
       <div
-        className={`h-full transition-all duration-200 w-full py-4 px-20 ${
+        className={`h-[100vh] overflow-y-auto transition-all duration-200 w-full py-4 px-20 ${
           darkMode ? "bg-gray-900" : "bg-gray-100"
         }`}
       >
-        <div className="w-full h-full flex flex-col gap-2 items-start justify-center relative">
-          <div className="w-[80%] flex py-2 items-center justify-center">
-            {filteredFiles.length > 0 && (
+        <div className="w-full h-full overflow-y-auto flex flex-col gap-2 items-start justify-center relative">
+          <div className="w-[40rem] flex py-2 items-center justify-center">
+            {filteredFiles?.length > 0 && (
               <div className="text-xs w-20 text-gray-400">Using Files</div>
             )}
             <div className="py-1 w-full flex gap-2 overflow-x-auto">
-              {filteredFiles.map((file, index) => (
+              {filteredFiles?.map((file, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-2 px-2 py-1 bg-white text-sm rounded-2xl"
                 >
                   <FaCircle className="text-green-500" />
-                  <div className="text-xs">{file.name}</div>
+                  <div className="text-xs w-40 truncate">{file.name}</div>
                 </div>
               ))}
             </div>
@@ -309,49 +392,76 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
             <div className="text-sm">View Files</div>
             <VscFileSubmodule />
           </button>
-          {currentChatData ? (
-            <div className="w-full py-2 h-full flex flex-col items-center justify-end overflow-y-auto">
-              {currentChatData.messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-4 w-full ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+          <div className="flex w-full h-screen overflow-y-auto">
+            {currentChatData ? (
+              <div className="w-full py-2 h-fit gap-2 flex flex-col items-center justify-end">
+                {currentChatData?.messages?.map((m, index) => (
                   <div
-                    className={`flex items-center gap-2 ${
-                      message.sender === "user"
-                        ? "flex-row-reverse"
-                        : "flex-row"
+                    key={index}
+                    className={`flex items-center gap-4 w-full ${
+                      m.sender === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`${
-                        darkMode ? "text-white" : "text-[#1B2559]"
-                      } transition-all duration-200`}
-                    >
-                      {message.sender === "user" ? <FaUser /> : <BsStars />}
-                    </div>
-                    <div
-                      className={`text-sm transition-all duration-200 rounded-2xl px-4 py-2 ${
-                        message.sender === "user"
-                          ? "bg-[#1B2559] text-white"
-                          : `text-[#1B2559] ${
-                              darkMode ? "bg-gray-100" : "bg-white"
-                            }`
+                      className={`flex items-center gap-2 ${
+                        m.sender === "user" ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
-                      {message.content}
+                      <div
+                        className={`${
+                          darkMode ? "text-white" : "text-[#1B2559]"
+                        } transition-all duration-200`}
+                      >
+                        {m.sender === "user" ? <FaUser /> : <BsStars />}
+                      </div>
+                      <div
+                        className={`text-sm transition-all duration-200 rounded-2xl px-4 py-2 ${
+                          m.sender === "user"
+                            ? "bg-[#1B2559] text-white"
+                            : `text-[#1B2559] ${
+                                darkMode ? "bg-gray-100" : "bg-white"
+                              }`
+                        }`}
+                      >
+                        {m.sender === "user" ? (
+                          m.content
+                        ) : (
+                          <div className="flex flex-col relative w-full mt-5">
+                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                            <IoIosVolumeHigh
+                              className="text-lg absolute -top-5 right-0 z-[600]"
+                              onClick={() => speak(m.content)}
+                            />
+                            <div className="flex flex-wrap w-full gap-2 items-center">
+                              {/* {m.content.includes("(") &&
+                                m.content.includes(")") && (
+                                  <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
+                                    {m.content.slice(
+                                      m.content.lastIndexOf("(") + 1,
+                                      m.content.lastIndexOf(")")
+                                    )}
+                                  </div>
+                                )} */}
+                              {m.isAction !== null && m.isAction && (
+                                <div className="py-2 px-2 text-sm rounded-xl mt-2 bg-sky-50 text-sky-800 border-[1px] border-sky-800">
+                                  Action Performed ✅
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <img src={NullImage} alt="null" className="h-[10rem]" />
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <img src={NullImage} alt="null" className="h-[10rem]" />
+              </div>
+            )}
+          </div>
+
           <div className="w-full h-14 gap-4 flex justify-center items-center">
             <div className="bg-white h-full w-full gap-2 flex justify-center items-center px-4 rounded-2xl">
               <input
@@ -362,7 +472,10 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-              <div className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-300 hover:text-gray-600 cursor-pointer">
+              <div
+                className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-300 hover:text-gray-600 cursor-pointer"
+                onClick={startListening}
+              >
                 <IoIosMic className="text-lg" />
               </div>
             </div>
@@ -405,7 +518,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                 fontSize={14}
               />
               <div className="flex flex-col w-full h-full">
-                {searchedFiles.map((file, index) => (
+                {searchedFiles?.map((file, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between w-full gap-4 py-2"
@@ -448,7 +561,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                           }
                         }}
                       >
-                        <div className="text-gray-700 pr-4 text-sm">
+                        <div className="text-gray-700 w-40 truncate pr-4 text-sm">
                           {file.name.split(".")[0]}
                         </div>
                         <div className="text-gray-400 text-xs">
@@ -481,9 +594,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
                 colorScheme="blue"
                 onClick={() => {
                   setFilteredFiles(
-                    sampleFileNames.filter((file) =>
-                      selectedFiles.includes(file.id)
-                    )
+                    allFiles.filter((file) => selectedFiles.includes(file.id))
                   );
                   onFilesViewClose();
                 }}
@@ -535,6 +646,7 @@ const ChatSection = ({ currentChatData, darkMode, setDarkMode }) => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <Toaster />
     </div>
   );
 };

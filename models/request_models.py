@@ -17,6 +17,7 @@ class RegisterRequest(BaseModel):
     username: str
     email: str
     password: str
+    phone: str
     
 class ChangeTierRequest(BaseModel):
     email: str

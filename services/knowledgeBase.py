@@ -14,10 +14,14 @@ import uuid
 import os
 from settings import Settings
 import time 
-
+import cohere
 env=Settings()
 OPENAI_API_KEY = env.openai_api_key
 LLAMA_CLOUD_API_KEY = env.llama_cloud_api_key
+COHERE_API_KEY=env.cohere_api_key
+
+co = cohere.Client(COHERE_API_KEY)
+
 
 def get_embedding_function():
     embeddings = OpenAIEmbeddings(
@@ -39,6 +43,98 @@ class KnowledgeBaseService:
        
         # self.create_collection()
         self.database.create_knowledgebase_collection(collection_name)
+    
+    
+    def search_knowledge_base_reranker(self,query,document_id=None):
+        startcache = time.time()
+    # cache_results = self.semantic_cache.search_cache(query)
+    # if cache_results is not None:
+    #     return cache_results
+        endcache = time.time()
+        durationcache = endcache - startcache
+        print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
+
+        query_embedding = self._query_embedding(query)
+        start_time = time.time()
+
+        # Perform a filtered search by document_id before limiting the results
+        if document_id:
+            search_result = self.vector_db.searchWithFilter(query_embedding, document_id, limit=25)  # Fetch 25 chunks
+        else:
+            search_result = self.vector_db.search(query_embedding, limit=25)
+
+        end_time = time.time()
+        duration = end_time - start_time
+        print(f"Time taken to fetch from vector database: {duration:.4f} seconds")
+
+        util_start = time.time()
+
+        # If no results are found, return a message
+        if not search_result or "matches" not in search_result or not search_result["matches"]:
+            return "Sorry, no relevant results found for the given document."
+
+        # Process the search results
+        results = []
+        texts_for_rerank = []
+        for hit in search_result["matches"]:
+            metadata = hit.get("metadata", {})  # Safely get metadata, or use an empty dictionary if None
+            text = metadata.get("text", "No text available")
+            filename = metadata.get("filename", "Unknown file")
+            page_number = metadata.get("page_number", "Unknown page")
+            score = hit.get("score", 0)
+
+            # Add to list for re-ranking
+            texts_for_rerank.append(text)
+
+            # Add the result to the list
+            results.append({
+                "text": text,
+                "filename": filename,
+                "page_number": page_number,
+                "score": score
+            })
+
+        # If no results after processing, return an appropriate message
+        print(results)
+        if not results:
+            return "Sorry, no relevant results found for the given document."
+
+        # **Step: Use Cohere Re-ranking API**
+        try:
+            reranked_docs = co.rerank(
+                query=query,
+                documents=texts_for_rerank,
+                top_n=len(texts_for_rerank),  # Re-rank all retrieved documents
+                model="rerank-english-v2.0"
+            )
+            # Sort results based on the re-ranking scores
+            reranked_results = sorted(
+                zip(results, reranked_docs),
+                key=lambda x: x[1].relevance_score,
+                reverse=True
+            )
+            
+            # Extract the top 10 sorted results based on the re-ranking
+            top_10_results = [doc[0] for doc in reranked_results[:10]]
+            print(top_10_results)
+        except Exception as e:
+            print(f"Error during re-ranking: {e}")
+            top_10_results = results[:10]  # Fallback to the top 10 results from the initial search if re-ranking fails
+
+        # Concatenate the results into a formatted string using the top 10 re-ranked results
+        informationT = time.time()
+        information = "\n".join(
+            [f"- {result['text']}\n  (Source: {result['filename']}, Page: {result['page_number']})" for result in top_10_results]
+        )
+
+        util_end = time.time()
+        duration_util = util_end - util_start
+        print(f"Time taken to fetch from utils: {duration_util:.4f} seconds")
+    
+    # Add the query to the cache for future use
+    # self.semantic_cache.add_to_cache(query, information)
+
+        return information
         
 
     # def search_knowledge_base(self, query,document_id):
@@ -90,13 +186,13 @@ class KnowledgeBaseService:
 
     # Check if the query is present in the cache
         startcache=time.time()
-        cache_results = self.semantic_cache.search_cache(query)
-        if cache_results is not None:
-            print("cache hit")
-            return cache_results
-        endcache=time.time()
-        durationcache=endcache-startcache
-        print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
+        # cache_results = self.semantic_cache.search_cache(query)
+        # if cache_results is not None:
+        #     print("cache hit")
+        #     return cache_results
+        # endcache=time.time()
+        # durationcache=endcache-startcache
+        # print(f"Time taken to fetch from cache: {durationcache:.4f} seconds")
 
         query_embedding = self._query_embedding(query)
         start_time = time.time()
@@ -124,7 +220,7 @@ class KnowledgeBaseService:
         # Process the search results
         results = []
         for hit in search_result["matches"]:
-            metadata = hit.get("metadata", {})  # Safely get metadata, or use an empty dictionary if None
+            metadata = hit.get("metadata", {})  
             text = metadata.get("text", "No text available")
             filename = metadata.get("filename", "Unknown file")
             page_number = metadata.get("page_number", "Unknown page")
@@ -152,7 +248,7 @@ class KnowledgeBaseService:
         duration_util=util_end-util_start
         print(f"Time taken to fetch from utils: {duration_util:.4f} seconds")
         # Add the query to the cache for future use
-        self.semantic_cache.add_to_cache(query, information)
+        # self.semantic_cache.add_to_cache(query, information)
 
         return information
 
@@ -192,11 +288,7 @@ class KnowledgeBaseService:
         messages.append({"role": "user", "content": user_prompt})
         gpt_response = self.llm_service.generate_response(messages)
 
-        self.database.update_session_context(session_id, {
-            "query": actual_query,
-            "gpt_response": gpt_response,
-            "msg_id":msg_id
-        })
+      
 
         return {"gpt_response":gpt_response,"session_id":session_id}
     def upload_file_to_knowledge_base(self,filename,document_id,actual_filename):
@@ -345,7 +437,10 @@ class KnowledgeBaseService:
     def _query_embedding(self, query):
         return get_embedding_function().embed_query(query)
 
-
-    
-
-
+    def get_documents(self):
+        try:
+            documents = self.database.get_all_documents()
+            print("Documents", documents)
+            return documents
+        except Exception as e:
+            raise Exception(f"Error fetching documents: {str(e)}")

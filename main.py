@@ -34,9 +34,10 @@ def start_fastapi():
 def start_action_executer():
     chatbot_name = "chatbot"
     num_workers = 5  
-    action_executer = ActionExecuter(chatbot_name, num_workers)
+    action_executer = ActionExecuter()
+    # action_executer = ActionExecuter(chatbot_name, num_workers)
     
-    action_executer.start_consuming() 
+    # action_executer.start_consuming() 
 
 
 
@@ -48,14 +49,14 @@ def start_docuemnt_processor():
 
 if __name__ == "__main__":
     fastapi_process = multiprocessing.Process(target=start_fastapi)
-    action_executer_process = multiprocessing.Process(target=start_action_executer)
+    # action_executer_process = multiprocessing.Process(target=start_action_executer)
     document_upload_process = multiprocessing.Process(target=start_docuemnt_processor)
 
 
     fastapi_process.start()
-    action_executer_process.start()
+    # action_executer_process.start()
     document_upload_process.start()
 
     fastapi_process.join()
-    action_executer_process.join()
+    # action_executer_process.join()
     document_upload_process.join()
